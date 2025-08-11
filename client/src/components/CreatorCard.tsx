@@ -1,117 +1,96 @@
-import { Heart, Eye, Star, Shield, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ProfileWithImages } from "@shared/schema";
 
 interface CreatorCardProps {
   profile: ProfileWithImages;
-  onFavorite?: (profileId: string) => void;
-  onView?: (profile: ProfileWithImages) => void;
-  isFavorited?: boolean;
+  onView: (profile: ProfileWithImages) => void;
+  onFavorite: (profileId: string) => void;
 }
 
-export default function CreatorCard({ profile, onFavorite, onView, isFavorited }: CreatorCardProps) {
-  const mainImage = profile.images?.find(img => img.isMainImage) || profile.images?.[0];
-  const isOnline = Math.random() > 0.3; // Mock online status
+export default function CreatorCard({ profile, onView, onFavorite }: CreatorCardProps) {
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorited(!isFavorited);
+    onFavorite(profile.id);
+  };
+
+  const handleView = () => {
+    onView(profile);
+  };
+
+  const coverImage = profile.images?.[0]?.url || `https://picsum.photos/600/400?random=${profile.id}`;
+  const profileImage = profile.images?.[1]?.url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
   
+  // Generate random favorite count between 10K-100K for demo
+  const favoriteCount = Math.floor(Math.random() * 90000) + 10000;
+
   return (
-    <div className="creator-card group" data-testid={`card-creator-${profile.id}`}>
-      {/* Creator Avatar/Cover */}
-      <div className="relative overflow-hidden">
+    <div className="onlyfans-card group cursor-pointer" onClick={handleView} data-testid="creator-card">
+      {/* Card Background with Cover Image */}
+      <div className="relative h-32 overflow-hidden rounded-lg">
         <img
-          src={mainImage?.imageUrl || `https://picsum.photos/280/370?random=${profile.id}`}
-          alt={profile.name}
-          className="creator-avatar transition-transform duration-300 group-hover:scale-105"
-          data-testid={`img-creator-${profile.id}`}
+          src={coverImage}
+          alt="Cover"
+          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `https://picsum.photos/600/400?random=${profile.id}-cover`;
+          }}
         />
         
-        {/* Online Status */}
-        {isOnline && (
-          <div className="absolute top-3 left-3 flex items-center bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-            <div className="online-indicator mr-1"></div>
-            Online
-          </div>
-        )}
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-black/20"></div>
         
-        {/* Verified Badge */}
-        <div className="absolute top-3 right-3">
-          <div className="verified-badge">
-            <Shield className="w-3 h-3 mr-1 inline" />
-            Verified
-          </div>
+        {/* OnlyFans Badge */}
+        <div className="absolute top-2 left-2">
+          <Badge className="bg-blue-500 hover:bg-blue-500 text-white text-xs font-semibold px-2 py-1">
+            OnlyFans
+          </Badge>
         </div>
-        
-        {/* Heart/Favorite Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute bottom-3 right-3 bg-black/50 hover:bg-black/70 text-white"
-          onClick={() => onFavorite?.(profile.id)}
-          data-testid={`button-favorite-${profile.id}`}
+
+        {/* Favorite Button */}
+        <button
+          className={`absolute top-2 right-2 p-1 rounded-full transition-colors ${
+            isFavorited ? "text-red-500" : "text-white/80 hover:text-red-500"
+          }`}
+          onClick={handleFavorite}
+          data-testid="button-favorite"
         >
-          <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current text-primary' : ''}`} />
-        </Button>
-        
-        {/* View Count Overlay */}
-        <div className="absolute bottom-3 left-3 flex items-center bg-black/50 text-white text-xs px-2 py-1 rounded">
-          <Eye className="w-3 h-3 mr-1" />
-          {Math.floor(Math.random() * 10000 + 1000)}
-        </div>
-      </div>
-      
-      {/* Creator Info */}
-      <div className="creator-info">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <h3 className="font-semibold text-lg text-foreground mb-1" data-testid={`text-creator-name-${profile.id}`}>
-              {profile.name}
-            </h3>
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {profile.title}
-            </p>
-          </div>
-          <div className="flex items-center text-yellow-400">
-            <Star className="w-4 h-4 fill-current mr-1" />
-            <span className="text-sm font-medium">{profile.rating}</span>
-          </div>
-        </div>
-        
-        {/* Location */}
-        <p className="text-sm text-muted-foreground mb-3">{profile.location}</p>
-        
-        {/* Category Badge */}
-        <Badge variant="secondary" className="mb-3">
-          <Zap className="w-3 h-3 mr-1" />
-          {profile.category}
-        </Badge>
-        
-        {/* Creator Stats */}
-        <div className="creator-stats">
-          <div className="text-sm">
-            <span className="text-primary font-semibold">{profile.reviewCount}</span> subscribers
-          </div>
-          <div className="text-sm">
-            <span className="text-secondary font-semibold">{profile.images?.length || 0}</span> posts
+          <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
+        </button>
+
+        {/* Profile Content Overlay */}
+        <div className="absolute inset-0 p-3 flex items-end">
+          <div className="flex items-center gap-3 w-full">
+            {/* Profile Picture */}
+            <div className="relative flex-shrink-0">
+              <img
+                src={profileImage}
+                alt={profile.name}
+                className="w-12 h-12 rounded-lg object-cover border-2 border-white/20"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
+                }}
+              />
+              {profile.isActive && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 min-w-0 text-white">
+              <h3 className="font-semibold text-base truncate mb-1">
+                {profile.name.toLowerCase().replace(/\s+/g, '')}
+              </h3>
+              <p className="text-white/90 text-sm">
+                {favoriteCount.toLocaleString()} favorites
+              </p>
+            </div>
           </div>
         </div>
-        
-        {/* Tags */}
-        <div className="creator-tags">
-          {profile.tags?.slice(0, 3).map((tag) => (
-            <span key={tag} className="creator-tag">
-              {tag}
-            </span>
-          ))}
-        </div>
-        
-        {/* Action Button */}
-        <Button
-          className="w-full mt-4 bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80"
-          onClick={() => onView?.(profile)}
-          data-testid={`button-view-${profile.id}`}
-        >
-          View Profile
-        </Button>
       </div>
     </div>
   );

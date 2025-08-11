@@ -114,7 +114,7 @@ export default function Landing() {
                 variant={filters.category === category ? "default" : "secondary"}
                 className="cursor-pointer px-4 py-2"
                 onClick={() => handleFilterChange('category', category)}
-                data-testid={`filter-${category.toLowerCase()}`}
+                data-testid={`filter-${category.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 {category}
               </Badge>
@@ -195,7 +195,7 @@ export default function Landing() {
             </div>
           ) : (
             <>
-              <div className="content-grid">
+              <div className="space-y-3">
                 {profiles.map((profile) => (
                   <CreatorCard
                     key={profile.id}

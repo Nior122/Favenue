@@ -1,8 +1,4 @@
 import {
-  users,
-  profiles,
-  profileImages,
-  userFavorites,
   type User,
   type UpsertUser,
   type Profile,
@@ -13,8 +9,7 @@ import {
   type InsertUserFavorite,
   type ProfileWithImages,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, and, desc, ilike, or } from "drizzle-orm";
+import { nanoid } from "nanoid";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -39,25 +34,29 @@ export interface IStorage {
   isFavorited(userId: string, profileId: string): Promise<boolean>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class MemStorage implements IStorage {
+  private users = new Map<string, User>();
+  private profiles = new Map<string, Profile>();
+  private profileImages = new Map<string, ProfileImage>();
+  private userFavorites = new Map<string, UserFavorite>();
+
   // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return this.users.get(id);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
+    const now = new Date();
+    const existingUser = this.users.get(userData.id!);
+    
+    const user: User = {
+      ...userData,
+      id: userData.id || nanoid(),
+      createdAt: existingUser?.createdAt || now,
+      updatedAt: now,
+    } as User;
+    
+    this.users.set(user.id, user);
     return user;
   }
 
@@ -70,264 +69,187 @@ export class DatabaseStorage implements IStorage {
     offset?: number;
     userId?: string;
   }): Promise<ProfileWithImages[]> {
-    let conditions = [eq(profiles.isActive, true)];
+    let profilesArray = Array.from(this.profiles.values())
+      .filter(p => p.isActive)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
 
+    // Apply filters
     if (filters?.category) {
-      conditions.push(eq(profiles.category, filters.category));
+      profilesArray = profilesArray.filter(p => p.category === filters.category);
     }
 
     if (filters?.location) {
-      conditions.push(ilike(profiles.location, `%${filters.location}%`));
-    }
-
-    if (filters?.search) {
-      conditions.push(
-        or(
-          ilike(profiles.name, `%${filters.search}%`),
-          ilike(profiles.title, `%${filters.search}%`),
-          ilike(profiles.description, `%${filters.search}%`)
-        )
+      profilesArray = profilesArray.filter(p => 
+        p.location?.toLowerCase().includes(filters.location!.toLowerCase())
       );
     }
 
-    let query = db
-      .select()
-      .from(profiles)
-      .leftJoin(profileImages, eq(profiles.id, profileImages.profileId))
-      .where(and(...conditions))
-      .orderBy(desc(profiles.createdAt));
+    if (filters?.search) {
+      const searchTerm = filters.search.toLowerCase();
+      profilesArray = profilesArray.filter(p => 
+        p.name.toLowerCase().includes(searchTerm) ||
+        p.title.toLowerCase().includes(searchTerm) ||
+        (p.description && p.description.toLowerCase().includes(searchTerm))
+      );
+    }
 
+    // Apply pagination
+    const offset = filters?.offset || 0;
     if (filters?.limit) {
-      query = query.limit(filters.limit);
+      profilesArray = profilesArray.slice(offset, offset + filters.limit);
+    } else if (offset > 0) {
+      profilesArray = profilesArray.slice(offset);
     }
 
-    if (filters?.offset) {
-      query = query.offset(filters.offset);
-    }
-
-    const results = await query;
-
-    // Group results by profile
-    const profileMap = new Map<string, ProfileWithImages>();
-    
-    for (const row of results) {
-      const profile = row.profiles;
-      const image = row.profile_images;
-
-      if (!profileMap.has(profile.id)) {
-        profileMap.set(profile.id, {
-          ...profile,
-          images: [],
-          isFavorited: false,
-        });
-      }
-
-      if (image) {
-        profileMap.get(profile.id)!.images.push(image);
-      }
-    }
-
-    const profilesWithImages = Array.from(profileMap.values());
-
-    // Check if profiles are favorited by the user
-    if (filters?.userId && profilesWithImages.length > 0) {
-      const profileIds = profilesWithImages.map(p => p.id);
-      const favorites = await db
-        .select()
-        .from(userFavorites)
-        .where(
-          and(
-            eq(userFavorites.userId, filters.userId),
-          )
-        );
-
-      const favoritedIds = new Set(favorites.map(f => f.profileId));
-      profilesWithImages.forEach(profile => {
-        profile.isFavorited = favoritedIds.has(profile.id);
+    // Add images and favorites
+    const profilesWithImages: ProfileWithImages[] = [];
+    for (const profile of profilesArray) {
+      const images = await this.getProfileImages(profile.id);
+      const isFavorited = filters?.userId ? 
+        await this.isFavorited(filters.userId, profile.id) : false;
+      
+      profilesWithImages.push({
+        ...profile,
+        images,
+        isFavorited,
       });
     }
-
-    // Sort images by order and set main image first
-    profilesWithImages.forEach(profile => {
-      profile.images.sort((a, b) => {
-        if (a.isMainImage && !b.isMainImage) return -1;
-        if (!a.isMainImage && b.isMainImage) return 1;
-        return parseInt(a.order || '0') - parseInt(b.order || '0');
-      });
-    });
 
     return profilesWithImages;
   }
 
   async getProfile(id: string, userId?: string): Promise<ProfileWithImages | undefined> {
-    const profile = await db
-      .select()
-      .from(profiles)
-      .where(and(eq(profiles.id, id), eq(profiles.isActive, true)))
-      .limit(1);
-
-    if (!profile.length) return undefined;
+    const profile = this.profiles.get(id);
+    if (!profile || !profile.isActive) return undefined;
 
     const images = await this.getProfileImages(id);
-    let isFavorited = false;
-
-    if (userId) {
-      isFavorited = await this.isFavorited(userId, id);
-    }
+    const isFavorited = userId ? await this.isFavorited(userId, id) : false;
 
     return {
-      ...profile[0],
+      ...profile,
       images,
       isFavorited,
     };
   }
 
   async createProfile(profileData: InsertProfile): Promise<Profile> {
-    const [profile] = await db
-      .insert(profiles)
-      .values(profileData)
-      .returning();
+    const now = new Date();
+    const profile: Profile = {
+      id: nanoid(),
+      ...profileData,
+      location: profileData.location || null,
+      description: profileData.description || null,
+      rating: profileData.rating || '0.0',
+      reviewCount: profileData.reviewCount || '0',
+      tags: profileData.tags || null,
+      isActive: profileData.isActive ?? true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    this.profiles.set(profile.id, profile);
     return profile;
   }
 
   async updateProfile(id: string, profileData: Partial<InsertProfile>): Promise<Profile | undefined> {
-    const [profile] = await db
-      .update(profiles)
-      .set({ ...profileData, updatedAt: new Date() })
-      .where(eq(profiles.id, id))
-      .returning();
-    return profile;
+    const existing = this.profiles.get(id);
+    if (!existing) return undefined;
+
+    const updated: Profile = {
+      ...existing,
+      ...profileData,
+      updatedAt: new Date(),
+    };
+    
+    this.profiles.set(id, updated);
+    return updated;
   }
 
   async deleteProfile(id: string): Promise<boolean> {
-    const result = await db
-      .update(profiles)
-      .set({ isActive: false })
-      .where(eq(profiles.id, id));
-    return result.rowCount! > 0;
+    const profile = this.profiles.get(id);
+    if (!profile) return false;
+
+    const updated = { ...profile, isActive: false };
+    this.profiles.set(id, updated);
+    return true;
   }
 
   // Profile image operations
   async addProfileImage(imageData: InsertProfileImage): Promise<ProfileImage> {
-    const [image] = await db
-      .insert(profileImages)
-      .values(imageData)
-      .returning();
+    const image: ProfileImage = {
+      id: nanoid(),
+      ...imageData,
+      order: imageData.order || '0',
+      isMainImage: imageData.isMainImage || false,
+      createdAt: new Date(),
+    };
+    
+    this.profileImages.set(image.id, image);
     return image;
   }
 
   async getProfileImages(profileId: string): Promise<ProfileImage[]> {
-    const images = await db
-      .select()
-      .from(profileImages)
-      .where(eq(profileImages.profileId, profileId))
-      .orderBy(desc(profileImages.isMainImage), profileImages.order);
+    const images = Array.from(this.profileImages.values())
+      .filter(img => img.profileId === profileId)
+      .sort((a, b) => {
+        if (a.isMainImage && !b.isMainImage) return -1;
+        if (!a.isMainImage && b.isMainImage) return 1;
+        return parseInt(a.order || '0') - parseInt(b.order || '0');
+      });
     
     return images;
   }
 
   async deleteProfileImage(id: string): Promise<boolean> {
-    const result = await db
-      .delete(profileImages)
-      .where(eq(profileImages.id, id));
-    return result.rowCount! > 0;
+    return this.profileImages.delete(id);
   }
 
   // Favorite operations
   async toggleFavorite(userId: string, profileId: string): Promise<boolean> {
-    const existing = await db
-      .select()
-      .from(userFavorites)
-      .where(
-        and(
-          eq(userFavorites.userId, userId),
-          eq(userFavorites.profileId, profileId)
-        )
-      );
+    const favoriteKey = `${userId}:${profileId}`;
+    const existing = Array.from(this.userFavorites.values())
+      .find(fav => fav.userId === userId && fav.profileId === profileId);
 
-    if (existing.length > 0) {
-      // Remove favorite
-      await db
-        .delete(userFavorites)
-        .where(
-          and(
-            eq(userFavorites.userId, userId),
-            eq(userFavorites.profileId, profileId)
-          )
-        );
+    if (existing) {
+      this.userFavorites.delete(existing.id);
       return false;
     } else {
-      // Add favorite
-      await db
-        .insert(userFavorites)
-        .values({ userId, profileId });
+      const favorite: UserFavorite = {
+        id: nanoid(),
+        userId,
+        profileId,
+        createdAt: new Date(),
+      };
+      this.userFavorites.set(favorite.id, favorite);
       return true;
     }
   }
 
   async getUserFavorites(userId: string): Promise<ProfileWithImages[]> {
-    const results = await db
-      .select()
-      .from(userFavorites)
-      .leftJoin(profiles, eq(userFavorites.profileId, profiles.id))
-      .leftJoin(profileImages, eq(profiles.id, profileImages.profileId))
-      .where(
-        and(
-          eq(userFavorites.userId, userId),
-          eq(profiles.isActive, true)
-        )
-      );
+    const userFavs = Array.from(this.userFavorites.values())
+      .filter(fav => fav.userId === userId);
 
-    // Group results by profile
-    const profileMap = new Map<string, ProfileWithImages>();
+    const profilesWithImages: ProfileWithImages[] = [];
     
-    for (const row of results) {
-      if (!row.profiles) continue;
-      
-      const profile = row.profiles;
-      const image = row.profile_images;
-
-      if (!profileMap.has(profile.id)) {
-        profileMap.set(profile.id, {
+    for (const fav of userFavs) {
+      const profile = this.profiles.get(fav.profileId);
+      if (profile && profile.isActive) {
+        const images = await this.getProfileImages(profile.id);
+        profilesWithImages.push({
           ...profile,
-          images: [],
+          images,
           isFavorited: true,
         });
       }
-
-      if (image) {
-        profileMap.get(profile.id)!.images.push(image);
-      }
     }
-
-    const profilesWithImages = Array.from(profileMap.values());
-
-    // Sort images by order and set main image first
-    profilesWithImages.forEach(profile => {
-      profile.images.sort((a, b) => {
-        if (a.isMainImage && !b.isMainImage) return -1;
-        if (!a.isMainImage && b.isMainImage) return 1;
-        return parseInt(a.order || '0') - parseInt(b.order || '0');
-      });
-    });
 
     return profilesWithImages;
   }
 
   async isFavorited(userId: string, profileId: string): Promise<boolean> {
-    const result = await db
-      .select()
-      .from(userFavorites)
-      .where(
-        and(
-          eq(userFavorites.userId, userId),
-          eq(userFavorites.profileId, profileId)
-        )
-      )
-      .limit(1);
-    
-    return result.length > 0;
+    return Array.from(this.userFavorites.values())
+      .some(fav => fav.userId === userId && fav.profileId === profileId);
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();

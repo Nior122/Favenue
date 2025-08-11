@@ -1,16 +1,15 @@
-import { db } from './db';
-import { profiles, profileImages } from '@shared/schema';
+import { storage } from './storage';
 import { nanoid } from 'nanoid';
 
 export async function seedDatabase() {
   // Check if data already exists
-  const existingProfiles = await db.select().from(profiles).limit(1);
+  const existingProfiles = await storage.getProfiles({ limit: 1 });
   if (existingProfiles.length > 0) {
-    console.log('Database already has data, skipping seed.');
+    console.log('Storage already has data, skipping seed.');
     return;
   }
 
-  console.log('Seeding database with sample profiles...');
+  console.log('Seeding storage with sample profiles...');
 
   // Sample profile data
   const sampleProfiles = [
@@ -113,25 +112,28 @@ export async function seedDatabase() {
   ];
 
   // Insert profiles
-  await db.insert(profiles).values(sampleProfiles);
+  const createdProfiles = [];
+  for (const profileData of sampleProfiles) {
+    const { id, ...profileWithoutId } = profileData;
+    const profile = await storage.createProfile(profileWithoutId);
+    createdProfiles.push(profile);
+  }
 
   // Sample images for profiles (using placeholder URLs)
-  const sampleImages = [];
-  for (const profile of sampleProfiles) {
+  let imageCount = 0;
+  for (const profile of createdProfiles) {
     // Add 2-4 images per profile
-    const imageCount = Math.floor(Math.random() * 3) + 2;
-    for (let i = 0; i < imageCount; i++) {
-      sampleImages.push({
-        id: nanoid(),
+    const imagesPerProfile = Math.floor(Math.random() * 3) + 2;
+    for (let i = 0; i < imagesPerProfile; i++) {
+      await storage.addProfileImage({
         profileId: profile.id,
         imageUrl: `https://picsum.photos/400/300?random=${profile.id}-${i}`,
         isMainImage: i === 0,
         order: i.toString()
       });
+      imageCount++;
     }
   }
 
-  await db.insert(profileImages).values(sampleImages);
-
-  console.log(`Seeded database with ${sampleProfiles.length} profiles and ${sampleImages.length} images.`);
+  console.log(`Seeded storage with ${createdProfiles.length} profiles and ${imageCount} images.`);
 }

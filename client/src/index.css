@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 98.04%);
+  --foreground: hsl(208 18% 17%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(208 18% 17%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(208 18% 17%);
+  --primary: hsl(0 69% 66%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(177 69% 57%);
+  --secondary-foreground: hsl(208 18% 17%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(48 100% 70%);
+  --accent-foreground: hsl(208 18% 17%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(0 69% 66%);
+  --chart-1: hsl(0 69% 66%);
+  --chart-2: hsl(177 69% 57%);
+  --chart-3: hsl(48 100% 70%);
+  --chart-4: hsl(142 76% 36%);
+  --chart-5: hsl(297 76% 71%);
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(208 18% 17%);
+  --sidebar-primary: hsl(0 69% 66%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(177 69% 90%);
+  --sidebar-accent-foreground: hsl(177 69% 57%);
+  --sidebar-border: hsl(214.3 31.8% 91.4%);
+  --sidebar-ring: hsl(0 69% 66%);
+  --font-sans: 'Inter', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 1rem;
+  --text: hsl(208 18% 17%);
+}
+
+.dark {
+  --background: hsl(208 18% 8%);
+  --foreground: hsl(0 0% 92%);
+  --card: hsl(208 18% 10%);
+  --card-foreground: hsl(0 0% 92%);
+  --popover: hsl(208 18% 8%);
+  --popover-foreground: hsl(0 0% 92%);
+  --primary: hsl(0 69% 66%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(177 69% 57%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(208 18% 15%);
+  --muted-foreground: hsl(215.4 16.3% 56%);
+  --accent: hsl(48 100% 70%);
+  --accent-foreground: hsl(208 18% 8%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(208 18% 15%);
+  --input: hsl(208 18% 15%);
+  --ring: hsl(0 69% 66%);
+  --text: hsl(0 0% 92%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  .font-poppins {
+    font-family: var(--font-poppins);
+  }
+}
+
+@layer components {
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(0 69% 66%) 0%, hsl(177 69% 57%) 100%);
+  }
+
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  }
+
+  .drag-drop-area {
+    border: 2px dashed hsl(177 69% 57%);
+    transition: all 0.3s ease;
+  }
+
+  .drag-drop-area.dragover {
+    border-color: hsl(0 69% 66%);
+    background-color: hsla(0 69% 66% / 0.1);
+  }
+}

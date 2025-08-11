@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Search, Filter, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export default function Landing() {
   const [loadMoreOffset, setLoadMoreOffset] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<ProfileWithImages | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [, navigate] = useLocation();
 
   const { data: profiles = [], isLoading } = useQuery<ProfileWithImages[]>({
     queryKey: ["/api/profiles", filters.category, filters.location, searchQuery, loadMoreOffset],
@@ -201,8 +203,7 @@ export default function Landing() {
                     key={profile.id}
                     profile={profile}
                     onView={(profile) => {
-                      setSelectedProfile(profile);
-                      setIsModalOpen(true);
+                      navigate(`/profile/${profile.id}`);
                     }}
                     onFavorite={(profileId) => console.log('Favorite:', profileId)}
                   />

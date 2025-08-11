@@ -22,8 +22,8 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
     onView(profile);
   };
 
-  const coverImage = profile.images?.[0]?.url || `https://picsum.photos/600/400?random=${profile.id}`;
-  const profileImage = profile.images?.[1]?.url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
+  const coverImage = profile.images?.[0]?.imageUrl || `https://picsum.photos/600/400?random=${profile.id}`;
+  const profileImage = profile.images?.[1]?.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
   
   // Generate random favorite count between 10K-100K for demo
   const favoriteCount = Math.floor(Math.random() * 90000) + 10000;

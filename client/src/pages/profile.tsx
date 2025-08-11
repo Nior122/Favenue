@@ -47,7 +47,7 @@ export default function ProfilePage() {
       "pov you're the fly that got trapped in my bathroom..."
     ];
     
-    return Array.from({ length: 24 }, (_, index) => ({
+    return Array.from({ length: 50 }, (_, index) => ({
       id: `post-${index}`,
       imageUrl: `https://picsum.photos/300/400?random=${profile.id}-${index}`,
       title: postTitles[index % postTitles.length],
@@ -63,7 +63,7 @@ export default function ProfilePage() {
     post.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const postsPerPage = 50;
+  const postsPerPage = 20;
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const currentPosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
@@ -197,7 +197,7 @@ export default function ProfilePage() {
 
                 {/* Posts Count */}
                 <p className="text-sm text-muted-foreground mb-4">
-                  Showing {Math.min(postsPerPage, filteredPosts.length)} of {filteredPosts.length}
+                  Showing {startIndex + 1} - {Math.min(startIndex + postsPerPage, filteredPosts.length)} of {filteredPosts.length}
                 </p>
 
                 {/* Posts Grid */}
@@ -206,7 +206,7 @@ export default function ProfilePage() {
                     <div
                       key={post.id}
                       className="group cursor-pointer bg-card rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors"
-                      onClick={() => setSelectedImage(post.imageUrl)}
+                      onClick={() => window.open(post.imageUrl, '_blank')}
                     >
                       {/* Post Image */}
                       <div className="relative aspect-[3/4] bg-muted">

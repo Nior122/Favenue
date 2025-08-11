@@ -18,7 +18,7 @@ export default function Navigation() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">C</span>
+                <span className="text-white font-bold text-lg">♥</span>
               </div>
               <span className="text-foreground text-xl font-bold font-poppins gradient-text">CreatorHub</span>
             </Link>
@@ -33,14 +33,17 @@ export default function Navigation() {
                   }`}
                   data-testid="link-browse"
                 >
-                  Creators
+                  Models
                 </span>
               </Link>
               <a href="#" className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-categories">
                 Categories
               </a>
               <a href="#" className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-premium">
-                Premium
+                VIP Access
+              </a>
+              <a href="#" className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-cam">
+                Live Shows
               </a>
             </div>
           </div>
@@ -48,6 +51,20 @@ export default function Navigation() {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                <Link href="/dashboard">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={`border-primary text-primary hover:bg-primary hover:text-white ${
+                      location === "/dashboard" ? "bg-primary text-white" : ""
+                    }`}
+                    data-testid="link-dashboard"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+                
                 {typedUser?.isAdmin && (
                   <Link href="/admin">
                     <Button 

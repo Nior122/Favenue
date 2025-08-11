@@ -43,8 +43,8 @@ export default function Landing() {
   });
 
   const featuredProfiles = profiles.filter((p, i) => i < 6);
-  const categories = ['Marketing', 'Technology', 'Design', 'Business'];
-  const locations = ['New York', 'San Francisco', 'London', 'Berlin', 'Toronto', 'Barcelona', 'Seoul', 'Chicago'];
+  const categories = ['Solo', 'Couples', 'Fetish', 'Cam Shows', 'Alternative', 'Luxury', 'Amateur', 'Ethnic'];
+  const locations = ['Miami', 'Los Angeles', 'Las Vegas', 'New York', 'Austin', 'Portland', 'Monaco', 'Phoenix'];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,10 +70,10 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20"></div>
         <div className="relative max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 gradient-text font-poppins">
-            Premium Creator Hub
+            Premium Adult Creator Hub
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Discover exclusive content creators and connect with the best talent in the industry
+            Discover exclusive adult content creators and connect with top-tier performers in premium entertainment
           </p>
           
           {/* Search Bar */}
@@ -81,7 +81,7 @@ export default function Landing() {
             <div className="flex rounded-xl overflow-hidden glass-effect">
               <Input
                 type="text"
-                placeholder="Search creators..."
+                placeholder="Search models and performers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 border-0 bg-transparent text-foreground placeholder:text-muted-foreground"
@@ -128,20 +128,20 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div className="glass-effect rounded-lg p-4">
-              <div className="text-2xl font-bold text-primary">1,200+</div>
-              <div className="text-sm text-muted-foreground">Active Creators</div>
+              <div className="text-2xl font-bold text-primary">2,500+</div>
+              <div className="text-sm text-muted-foreground">Verified Models</div>
             </div>
             <div className="glass-effect rounded-lg p-4">
-              <div className="text-2xl font-bold text-secondary">50K+</div>
-              <div className="text-sm text-muted-foreground">Premium Posts</div>
+              <div className="text-2xl font-bold text-secondary">100K+</div>
+              <div className="text-sm text-muted-foreground">Premium Videos</div>
             </div>
             <div className="glass-effect rounded-lg p-4">
               <div className="text-2xl font-bold text-primary">24/7</div>
-              <div className="text-sm text-muted-foreground">Online Support</div>
+              <div className="text-sm text-muted-foreground">Live Shows</div>
             </div>
             <div className="glass-effect rounded-lg p-4">
-              <div className="text-2xl font-bold text-secondary">98%</div>
-              <div className="text-sm text-muted-foreground">Satisfaction</div>
+              <div className="text-2xl font-bold text-secondary">99%</div>
+              <div className="text-sm text-muted-foreground">Privacy Secure</div>
             </div>
           </div>
         </div>
@@ -153,10 +153,10 @@ export default function Landing() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-foreground mb-2 font-poppins">
-                Featured Creators
+                Featured Models
               </h2>
               <p className="text-muted-foreground">
-                Discover our most popular and highly-rated content creators
+                Discover our most popular and highly-rated adult content creators
               </p>
             </div>
             
@@ -212,7 +212,7 @@ export default function Landing() {
               {profiles.length === 0 && (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🔍</div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">No creators found</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No models found</h3>
                   <p className="text-muted-foreground">Try adjusting your search criteria</p>
                 </div>
               )}
@@ -224,7 +224,7 @@ export default function Landing() {
                     className="bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 px-8 py-3"
                     data-testid="button-load-more"
                   >
-                    Load More Creators
+                    Load More Models
                   </Button>
                 </div>
               )}
@@ -237,7 +237,7 @@ export default function Landing() {
       <footer className="border-t border-border py-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-muted-foreground">
-            © 2025 Premium Creator Hub. All rights reserved.
+            © 2025 CreatorHub Premium. All rights reserved. 18+ Only.
           </p>
         </div>
       </footer>

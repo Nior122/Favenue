@@ -81,14 +81,14 @@ export default function Home() {
             Welcome Back!
           </h2>
           <p className="text-xl mb-10 text-white opacity-90" data-testid="hero-description">
-            Discover and save your favorite professionals
+            Discover and save your favorite adult content creators
           </p>
           
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
             <div className="flex rounded-lg overflow-hidden shadow-2xl">
               <Input
                 type="text"
-                placeholder="Search profiles..."
+                placeholder="Search models and performers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 px-6 py-4 text-text focus:outline-none border-0 rounded-none"
@@ -111,7 +111,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs defaultValue="browse" className="space-y-8">
             <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto">
-              <TabsTrigger value="browse" data-testid="tab-browse">Browse Profiles</TabsTrigger>
+              <TabsTrigger value="browse" data-testid="tab-browse">Browse Models</TabsTrigger>
               <TabsTrigger value="favorites" data-testid="tab-favorites">My Favorites</TabsTrigger>
             </TabsList>
 
@@ -119,10 +119,10 @@ export default function Home() {
               {/* Featured Profiles */}
               <div className="text-center mb-12">
                 <h3 className="text-3xl font-bold text-text mb-4 font-poppins" data-testid="text-featured-title">
-                  Featured Profiles
+                  Featured Models
                 </h3>
                 <p className="text-gray-600" data-testid="text-featured-description">
-                  Meet our most popular professionals
+                  Meet our most popular adult content creators
                 </p>
               </div>
               
@@ -151,10 +151,10 @@ export default function Home() {
                 <div className="lg:w-3/4">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-bold text-text font-poppins" data-testid="text-all-profiles-title">
-                      All Profiles
+                      All Models
                     </h3>
                     <span className="text-gray-600" data-testid="text-profile-count">
-                      {profiles.length} profiles found
+                      {profiles.length} models found
                     </span>
                   </div>
 
@@ -184,7 +184,7 @@ export default function Home() {
                             className="bg-primary text-white px-8 py-3 rounded-lg hover:bg-opacity-90 transition font-medium"
                             data-testid="button-load-more"
                           >
-                            Load More Profiles
+                            Load More Models
                           </Button>
                         </div>
                       )}
@@ -216,7 +216,7 @@ export default function Home() {
                   <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-xl font-semibold text-text mb-2" data-testid="text-no-favorites">No favorites yet</h4>
                   <p className="text-gray-600" data-testid="text-no-favorites-description">
-                    Start exploring profiles and save the ones you like!
+                    Start exploring models and save the ones you like!
                   </p>
                 </div>
               ) : (

@@ -44,12 +44,14 @@ export default function SearchFilters({ filters, onFiltersChange }: SearchFilter
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Marketing">Marketing</SelectItem>
-                <SelectItem value="Design">Design</SelectItem>
-                <SelectItem value="Technology">Technology</SelectItem>
-                <SelectItem value="Business">Business</SelectItem>
-                <SelectItem value="Creative">Creative</SelectItem>
-                <SelectItem value="Consulting">Consulting</SelectItem>
+                <SelectItem value="Solo">Solo Performers</SelectItem>
+                <SelectItem value="Couples">Couples Content</SelectItem>
+                <SelectItem value="Fetish">Fetish & BDSM</SelectItem>
+                <SelectItem value="Cam Shows">Cam Shows</SelectItem>
+                <SelectItem value="Alternative">Alternative Style</SelectItem>
+                <SelectItem value="Luxury">Luxury Content</SelectItem>
+                <SelectItem value="Amateur">Amateur/GND</SelectItem>
+                <SelectItem value="Ethnic">Ethnic Performers</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -88,11 +90,11 @@ export default function SearchFilters({ filters, onFiltersChange }: SearchFilter
             <div className="space-y-2">
               <label className="flex items-center space-x-2 cursor-pointer" data-testid="checkbox-available">
                 <Checkbox id="available" />
-                <span className="text-sm">Available now</span>
+                <span className="text-sm">Online now</span>
               </label>
               <label className="flex items-center space-x-2 cursor-pointer" data-testid="checkbox-featured">
                 <Checkbox id="featured" />
-                <span className="text-sm">Featured profiles</span>
+                <span className="text-sm">Verified models</span>
               </label>
             </div>
           </div>

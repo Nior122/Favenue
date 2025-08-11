@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seedData";
+import { createAdminUser } from "./seedAdmin";
 
 const app = express();
 app.use(express.json());
@@ -40,6 +41,9 @@ app.use((req, res, next) => {
 (async () => {
   // Seed database with sample data
   await seedDatabase();
+  
+  // Create admin user for testing
+  await createAdminUser();
   
   const server = await registerRoutes(app);
 

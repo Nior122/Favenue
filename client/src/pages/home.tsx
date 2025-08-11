@@ -239,6 +239,7 @@ export default function Home() {
       {selectedProfile && (
         <ProfileModal
           profile={selectedProfile}
+          isOpen={!!selectedProfile}
           onClose={() => setSelectedProfile(null)}
         />
       )}

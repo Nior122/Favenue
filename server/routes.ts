@@ -13,7 +13,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      let user = await storage.getUser(userId);
+      
+      // If user doesn't exist, create them from claims
+      if (!user) {
+        const claims = req.user.claims;
+        const isTestAdmin = claims.email === "admin@creatorhub.test" || 
+                           claims.sub === "admin-test-user";
+        
+        user = await storage.upsertUser({
+          id: claims.sub,
+          email: claims.email,
+          firstName: claims.first_name,
+          lastName: claims.last_name,
+          profileImageUrl: claims.profile_image_url,
+          isAdmin: isTestAdmin,
+        });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -122,6 +139,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting profile:", error);
       res.status(500).json({ message: "Failed to delete profile" });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/profiles', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const profiles = await storage.getProfiles();
+      res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching admin profiles:", error);
+      res.status(500).json({ message: "Failed to fetch profiles" });
+    }
+  });
+
+  app.post('/api/admin/profiles', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertProfileSchema.parse(req.body);
+      const profile = await storage.createProfile(validatedData);
+      res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating profile:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create profile" });
+    }
+  });
+
+  app.put('/api/admin/profiles/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const validatedData = insertProfileSchema.partial().parse(req.body);
+      const profile = await storage.updateProfile(id, validatedData);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.delete('/api/admin/profiles/:id', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { id } = req.params;
+      const success = await storage.deleteProfile(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      res.json({ message: "Profile deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting profile:", error);
+      res.status(500).json({ message: "Failed to delete profile" });
+    }
+  });
+
+  app.post('/api/admin/profile-images', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertProfileImageSchema.parse(req.body);
+      const image = await storage.addProfileImage(validatedData);
+      res.status(201).json(image);
+    } catch (error) {
+      console.error("Error creating profile image:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid image data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create profile image" });
+    }
+  });
+
+  app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Mock admin stats for now
+      const stats = {
+        totalFavorites: 42,
+        totalViews: 1250,
+        totalUsers: 15,
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // User routes
+  app.get('/api/user/favorites', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const favorites = await storage.getUserFavorites(userId);
+      res.json(favorites);
+    } catch (error) {
+      console.error("Error fetching user favorites:", error);
+      res.status(500).json({ message: "Failed to fetch favorites" });
+    }
+  });
+
+  app.post('/api/user/favorites/:profileId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { profileId } = req.params;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const isFavorited = await storage.toggleFavorite(userId, profileId);
+      res.json({ isFavorited });
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      res.status(500).json({ message: "Failed to toggle favorite" });
+    }
+  });
+
+  app.get('/api/user/stats', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Mock user stats for now
+      const stats = {
+        profileViews: 25,
+        interactions: 12,
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
     }
   });
 

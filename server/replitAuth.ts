@@ -54,12 +54,17 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  // Check if this is the test admin user
+  const isTestAdmin = claims["email"] === "admin@creatorhub.test" || 
+                     claims["sub"] === "admin-test-user";
+  
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    isAdmin: isTestAdmin,
   });
 }
 

@@ -49,38 +49,36 @@ export default function Navigation() {
           </div>
           
           <div className="flex items-center space-x-4">
+            <Link href="/dashboard">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`border-primary text-primary hover:bg-primary hover:text-white ${
+                  location === "/dashboard" ? "bg-primary text-white" : ""
+                }`}
+                data-testid="link-dashboard"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+            
+            <Link href="/admin">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`border-secondary text-secondary hover:bg-secondary hover:text-white ${
+                  location === "/admin" ? "bg-secondary text-white" : ""
+                }`}
+                data-testid="link-admin"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin
+              </Button>
+            </Link>
+            
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className={`border-primary text-primary hover:bg-primary hover:text-white ${
-                      location === "/dashboard" ? "bg-primary text-white" : ""
-                    }`}
-                    data-testid="link-dashboard"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </Button>
-                </Link>
-                
-                {typedUser?.isAdmin && (
-                  <Link href="/admin">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={`border-secondary text-secondary hover:bg-secondary hover:text-white ${
-                        location === "/admin" ? "bg-secondary text-white" : ""
-                      }`}
-                      data-testid="link-admin"
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </Button>
-                  </Link>
-                )}
-                
                 <div className="flex items-center space-x-2">
                   {typedUser?.profileImageUrl && (
                     <img
@@ -107,26 +105,13 @@ export default function Navigation() {
                 </Button>
               </>
             ) : (
-              <>
-                <Button
-                  onClick={() => window.location.href = "/api/login"}
-                  className="bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white"
-                  data-testid="button-signin"
-                >
-                  Join Now
-                </Button>
-                
-                <Link href="/admin">
-                  <Button 
-                    variant="outline" 
-                    className="border-secondary text-secondary hover:bg-secondary hover:text-white"
-                    data-testid="button-admin"
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              </>
+              <Button
+                onClick={() => window.location.href = "/api/login"}
+                className="bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white"
+                data-testid="button-signin"
+              >
+                Join Now
+              </Button>
             )}
           </div>
         </div>

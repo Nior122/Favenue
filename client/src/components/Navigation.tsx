@@ -12,34 +12,35 @@ export default function Navigation() {
   const typedUser = user as UserType;
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-card border-b border-border sticky top-0 z-50 glass-effect">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href="/">
-              <h1 className="text-2xl font-bold text-primary font-poppins cursor-pointer" data-testid="link-home">
-                ProfileHub
-              </h1>
+            <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">C</span>
+              </div>
+              <span className="text-foreground text-xl font-bold font-poppins gradient-text">CreatorHub</span>
             </Link>
           </div>
           
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+            <div className="ml-10 flex items-baseline space-x-6">
               <Link href="/">
                 <span 
-                  className={`text-text hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer ${
+                  className={`text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer ${
                     location === "/" ? "text-primary" : ""
                   }`}
                   data-testid="link-browse"
                 >
-                  Browse
+                  Creators
                 </span>
               </Link>
-              <a href="#" className="text-text hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-categories">
+              <a href="#" className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-categories">
                 Categories
               </a>
-              <a href="#" className="text-text hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-about">
-                About
+              <a href="#" className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition" data-testid="link-premium">
+                Premium
               </a>
             </div>
           </div>
@@ -92,10 +93,10 @@ export default function Navigation() {
               <>
                 <Button
                   onClick={() => window.location.href = "/api/login"}
-                  className="bg-primary text-white hover:bg-primary/90"
+                  className="bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 text-white"
                   data-testid="button-signin"
                 >
-                  Sign In
+                  Join Now
                 </Button>
                 
                 <Link href="/admin">

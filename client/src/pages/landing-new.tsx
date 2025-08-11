@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import CreatorCard from "@/components/CreatorCard";
-import ProfileModal from "@/components/ProfileModal";
 import { ProfileWithImages } from "@shared/schema";
 
 export default function Landing() {
@@ -17,8 +16,6 @@ export default function Landing() {
     location: "",
   });
   const [loadMoreOffset, setLoadMoreOffset] = useState(0);
-  const [selectedProfile, setSelectedProfile] = useState<ProfileWithImages | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: profiles = [], isLoading } = useQuery<ProfileWithImages[]>({
     queryKey: ["/api/profiles", filters.category, filters.location, searchQuery, loadMoreOffset],
@@ -52,8 +49,7 @@ export default function Landing() {
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    const filterValue = value === 'all-locations' ? '' : value;
-    setFilters(prev => ({ ...prev, [key]: filterValue }));
+    setFilters(prev => ({ ...prev, [key]: value }));
     setLoadMoreOffset(0);
   };
 
@@ -167,7 +163,7 @@ export default function Landing() {
                   <SelectValue placeholder="All Locations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-locations">All Locations</SelectItem>
+                  <SelectItem value="">All Locations</SelectItem>
                   {locations.map((location) => (
                     <SelectItem key={location} value={location}>{location}</SelectItem>
                   ))}
@@ -200,10 +196,7 @@ export default function Landing() {
                   <CreatorCard
                     key={profile.id}
                     profile={profile}
-                    onView={(profile) => {
-                      setSelectedProfile(profile);
-                      setIsModalOpen(true);
-                    }}
+                    onView={(profile) => console.log('View profile:', profile.id)}
                     onFavorite={(profileId) => console.log('Favorite:', profileId)}
                   />
                 ))}
@@ -241,17 +234,6 @@ export default function Landing() {
           </p>
         </div>
       </footer>
-
-      {/* Profile Modal */}
-      <ProfileModal
-        profile={selectedProfile}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedProfile(null);
-        }}
-        onFavorite={(profileId) => console.log('Favorite:', profileId)}
-      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-ProfileHub is a full-stack web application for browsing and managing professional profiles. It serves as a directory platform where users can discover talented individuals across various categories like Marketing, Design, Technology, and Business. The application features a modern React frontend with a Node.js/Express backend, PostgreSQL database integration via Drizzle ORM, and Replit authentication for user management.
+CreatorHub is a full-stack web application redesigned as an adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories. The application features a dark-themed React frontend with adult content platform styling, Node.js/Express backend, PostgreSQL database integration via Drizzle ORM, and Replit authentication for user management.
 
 ## User Preferences
 

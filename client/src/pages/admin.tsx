@@ -688,33 +688,48 @@ export default function AdminPage() {
             {selectedProfile && (
               <div className="mt-6 space-y-4">
                 {/* Bulk Actions */}
-                {selectedImages.length > 0 && (
-                  <div className="flex gap-2 p-4 bg-muted rounded-lg">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm(`Delete ${selectedImages.length} selected images?`)) {
-                          bulkDeleteImagesMutation.mutate({
-                            profileId: selectedProfile.id,
-                            imageIds: selectedImages
-                          });
-                        }
-                      }}
-                      disabled={bulkDeleteImagesMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete {selectedImages.length} Selected
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedImages([])}
-                    >
-                      Clear Selection
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-2 p-4 bg-muted rounded-lg">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedImages.length === selectedProfile.images.length) {
+                        setSelectedImages([]);
+                      } else {
+                        setSelectedImages(selectedProfile.images.map(img => img.id));
+                      }
+                    }}
+                  >
+                    {selectedImages.length === selectedProfile.images.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  {selectedImages.length > 0 && (
+                    <>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm(`Delete ${selectedImages.length} selected images?`)) {
+                            bulkDeleteImagesMutation.mutate({
+                              profileId: selectedProfile.id,
+                              imageIds: selectedImages
+                            });
+                          }
+                        }}
+                        disabled={bulkDeleteImagesMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete {selectedImages.length} Selected
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedImages([])}
+                      >
+                        Clear Selection
+                      </Button>
+                    </>
+                  )}
+                </div>
 
                 {/* Images Grid */}
                 <div className="grid grid-cols-3 gap-4">

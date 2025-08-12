@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { Heart, Upload, Search, Eye } from "lucide-react";
+import { Heart, Search, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -146,14 +146,6 @@ export default function ProfilePage() {
               
               {/* Action Buttons */}
               <div className="flex gap-2 sm:gap-3">
-                <Button 
-                  size="sm"
-                  className="bg-green-800/90 hover:bg-green-700/90 text-white border border-green-600 text-xs sm:text-sm"
-                  data-testid="button-upload-file"
-                >
-                  <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  Upload file
-                </Button>
                 <Button 
                   size="sm"
                   variant="outline"

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -645,7 +646,7 @@ export default function AdminPage() {
                           className="w-full sm:w-auto flex-1"
                         >
                           <ImageIcon className="w-3 h-3 mr-1" />
-                          Images
+                          Manage Images
                         </Button>
                         <Button
                           size="sm"
@@ -673,6 +674,117 @@ export default function AdminPage() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Image Management Sheet */}
+        <Sheet open={isImageManagerOpen} onOpenChange={setIsImageManagerOpen}>
+          <SheetContent className="max-w-4xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Manage Images - {selectedProfile?.name}</SheetTitle>
+              <SheetDescription>
+                Select images to delete or edit. Click images to select them for bulk operations.
+              </SheetDescription>
+            </SheetHeader>
+            
+            {selectedProfile && (
+              <div className="mt-6 space-y-4">
+                {/* Bulk Actions */}
+                {selectedImages.length > 0 && (
+                  <div className="flex gap-2 p-4 bg-muted rounded-lg">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`Delete ${selectedImages.length} selected images?`)) {
+                          bulkDeleteImagesMutation.mutate({
+                            profileId: selectedProfile.id,
+                            imageIds: selectedImages
+                          });
+                        }
+                      }}
+                      disabled={bulkDeleteImagesMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete {selectedImages.length} Selected
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedImages([])}
+                    >
+                      Clear Selection
+                    </Button>
+                  </div>
+                )}
+
+                {/* Images Grid */}
+                <div className="grid grid-cols-3 gap-4">
+                  {selectedProfile.images.map((image) => (
+                    <div key={image.id} className="relative group">
+                      {/* Selection Checkbox */}
+                      <div className="absolute top-2 left-2 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedImages.includes(image.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedImages([...selectedImages, image.id]);
+                            } else {
+                              setSelectedImages(selectedImages.filter(id => id !== image.id));
+                            }
+                          }}
+                          className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
+                        />
+                      </div>
+
+                      {/* Image */}
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={image.imageUrl}
+                          alt={`Gallery image ${image.order}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Image Actions */}
+                      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            if (confirm('Delete this image?')) {
+                              deleteSingleImageMutation.mutate(image.id);
+                            }
+                          }}
+                          disabled={deleteSingleImageMutation.isPending}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+
+                      {/* Main Image Badge */}
+                      {image.isMainImage && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant="default" className="text-xs">
+                            Main
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* No Images Message */}
+                {selectedProfile.images.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No Images</h3>
+                    <p>This profile has no images uploaded.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
 
         {/* Edit Profile Sheet */}
         <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>

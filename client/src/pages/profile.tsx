@@ -33,30 +33,17 @@ export default function ProfilePage() {
 
   // Generate mock posts for the profile - exactly like the screenshot
   const generatePosts = (profile: ProfileWithImages): Post[] => {
-    if (!profile) return [];
+    // Return only actual profile images, not generated posts
+    if (!profile || !profile.images || profile.images.length === 0) return [];
     
-    const postTitles = [
-      "just hangin out lol",
-      "cum here often?", 
-      "naked 99% of the time lol",
-      "taking you in the shower with me... no masturbatio...",
-      "okay okay enough teasing... full video from this bj...",
-      "my cleavage said to tell you( hi :)",
-      "do we fuck w the side angle??",
-      "pov you're the fly that got trapped in my bathroom...",
-      "morning selfie vibes",
-      "shower time again...",
-      "bed time routine",
-      "just me being me"
-    ];
-    
-    return Array.from({ length: 1336 }, (_, index) => ({
-      id: `post-${index}`,
-      imageUrl: `https://picsum.photos/300/400?random=${profile.id}-${index}`,
-      title: postTitles[index % postTitles.length],
-      description: postTitles[index % postTitles.length],
-      date: `2025/07/${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
-      attachments: Math.floor(Math.random() * 3)
+    // Convert profile images to posts format
+    return profile.images.map((image, index) => ({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      title: `Gallery Image ${index + 1}`,
+      description: `Gallery Image ${index + 1}`,
+      date: image.createdAt ? new Date(image.createdAt).toLocaleDateString('en-CA') : '2025/08/12',
+      attachments: 1
     }));
   };
 

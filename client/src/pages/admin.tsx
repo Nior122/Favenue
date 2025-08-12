@@ -21,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 const createProfileSchema = insertProfileSchema.extend({
+  profilePictureUrl: z.string().url().optional().or(z.literal("")),
+  coverPhotoUrl: z.string().url().optional().or(z.literal("")),
   imageUrls: z.array(z.string().url()).optional(),
 });
 
@@ -72,6 +74,8 @@ export default function AdminPage() {
       category: "",
       location: "",
       description: "",
+      profilePictureUrl: "",
+      coverPhotoUrl: "",
       rating: "0.0",
       reviewCount: "0",
       tags: [],
@@ -398,11 +402,16 @@ export default function AdminPage() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
+                                  <SelectItem value="OnlyFans Creator">OnlyFans Creator</SelectItem>
+                                  <SelectItem value="Fanvenue Model">Fanvenue Model</SelectItem>
+                                  <SelectItem value="Premium Content">Premium Content</SelectItem>
+                                  <SelectItem value="Adult Entertainer">Adult Entertainer</SelectItem>
+                                  <SelectItem value="Cam Model">Cam Model</SelectItem>
                                   <SelectItem value="Content Creator">Content Creator</SelectItem>
-                                  <SelectItem value="Model">Model</SelectItem>
-                                  <SelectItem value="Influencer">Influencer</SelectItem>
-                                  <SelectItem value="Artist">Artist</SelectItem>
-                                  <SelectItem value="Photographer">Photographer</SelectItem>
+                                  <SelectItem value="Fetish Creator">Fetish Creator</SelectItem>
+                                  <SelectItem value="MILF">MILF</SelectItem>
+                                  <SelectItem value="Teen 18+">Teen 18+</SelectItem>
+                                  <SelectItem value="Couples">Couples</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -436,12 +445,40 @@ export default function AdminPage() {
                           </FormItem>
                         )}
                       />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={createForm.control}
+                          name="profilePictureUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Profile Picture URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://example.com/profile.jpg" {...field} value={field.value || ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createForm.control}
+                          name="coverPhotoUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cover Photo URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://example.com/cover.jpg" {...field} value={field.value || ""} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={createForm.control}
                         name="imageUrls"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Image URLs (one per line)</FormLabel>
+                            <FormLabel>Gallery Image URLs (one per line)</FormLabel>
                             <FormControl>
                               <Textarea 
                                 placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"

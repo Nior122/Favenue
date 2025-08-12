@@ -145,6 +145,8 @@ export class MemStorage implements IStorage {
       ...profileData,
       location: profileData.location || null,
       description: profileData.description || null,
+      profilePictureUrl: profileData.profilePictureUrl || null,
+      coverPhotoUrl: profileData.coverPhotoUrl || null,
       rating: profileData.rating || '0.0',
       reviewCount: profileData.reviewCount || '0',
       likesCount: profileData.likesCount || '0',

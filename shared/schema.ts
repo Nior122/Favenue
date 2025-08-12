@@ -44,6 +44,8 @@ export const profiles = pgTable("profiles", {
   category: varchar("category").notNull(),
   location: varchar("location"),
   description: text("description"),
+  profilePictureUrl: varchar("profile_picture_url"),
+  coverPhotoUrl: varchar("cover_photo_url"),
   rating: decimal("rating", { precision: 2, scale: 1 }).default('0.0'),
   reviewCount: varchar("review_count").default('0'),
   likesCount: varchar("likes_count").default('0').notNull(),

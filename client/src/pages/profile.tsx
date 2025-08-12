@@ -172,6 +172,26 @@ export default function ProfilePage() {
                   ★Favorite
                 </Button>
               </div>
+              
+              {/* Dashboard Stats - OnlyFans Style */}
+              <div className="flex gap-4 text-xs sm:text-sm text-gray-300 mt-2">
+                <div className="text-center">
+                  <div className="font-semibold text-white">{profile.mediaCount || profile.images?.length || '0'}</div>
+                  <div>Posts</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-white">{profile.likesCount || '0'}</div>
+                  <div>Likes</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-white">{profile.viewsCount || '0'}</div>
+                  <div>Views</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-white">{profile.subscribersCount || profile.reviewCount || '0'}</div>
+                  <div>Subscribers</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

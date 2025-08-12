@@ -141,7 +141,10 @@ export default function ProfilePage() {
             
             {/* Profile Details */}
             <div className="text-white pb-2">
-              <h1 className="text-2xl font-bold mb-2">
+              <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-white fill-current" />
+                </div>
                 {profile.name.toLowerCase().replace(/\s+/g, '')}
               </h1>
               
@@ -163,7 +166,8 @@ export default function ProfilePage() {
               <div className="flex gap-3">
                 <Button 
                   size="sm" 
-                  className="bg-gray-700/80 hover:bg-gray-600/80 text-white"
+                  className="bg-gray-700/80 hover:bg-gray-600/80 text-white border border-gray-600"
+                  data-testid="button-upload-file"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload file
@@ -173,9 +177,10 @@ export default function ProfilePage() {
                   variant="outline"
                   className={`border-gray-500 ${isFavorited ? 'bg-red-500 text-white' : 'text-white hover:bg-red-500'}`}
                   onClick={() => setIsFavorited(!isFavorited)}
+                  data-testid="button-favorite"
                 >
                   <Heart className={`w-4 h-4 mr-2 ${isFavorited ? 'fill-current' : ''}`} />
-                  Favorite
+                  ★Favorite
                 </Button>
               </div>
             </div>
@@ -218,6 +223,7 @@ export default function ProfilePage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                    data-testid="input-search"
                   />
                 </div>
               </div>
@@ -290,6 +296,7 @@ export default function ProfilePage() {
                     key={post.id}
                     className="group cursor-pointer bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-blue-500 transition-colors"
                     onClick={() => window.open(post.imageUrl, '_blank')}
+                    data-testid={`card-post-${post.id}`}
                   >
                     {/* Post Image */}
                     <div className="relative aspect-[3/4] bg-gray-700">

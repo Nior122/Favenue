@@ -66,7 +66,7 @@ export default function ProfilePage() {
     post.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const postsPerPage = 50;
+  const postsPerPage = 20;
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const currentPosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
@@ -86,10 +86,10 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading profile...</p>
+          <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
@@ -97,10 +97,10 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
-          <p className="text-gray-400">The profile you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground">The profile you're looking for doesn't exist.</p>
         </div>
       </div>
     );
@@ -110,7 +110,7 @@ export default function ProfilePage() {
   const coverImage = profile.images?.[0]?.imageUrl || `https://picsum.photos/1200/400?random=${profile.id}`;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Profile Header - Exactly like OnlyFans */}
       <div className="relative h-48 sm:h-64 overflow-hidden">
         {/* Cover Image with Dark Overlay */}
@@ -123,7 +123,7 @@ export default function ProfilePage() {
               (e.target as HTMLImageElement).src = `https://picsum.photos/1200/400?random=${profile.id}-cover`;
             }}
           />
-          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute inset-0 bg-black/50"></div>
         </div>
         
         {/* Profile Content Overlay */}
@@ -140,7 +140,7 @@ export default function ProfilePage() {
                 }}
               />
               {/* Verified Badge */}
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-full flex items-center justify-center border-2 border-white">
                 <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white fill-current" />
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function ProfilePage() {
               <div className="flex gap-2 sm:gap-3">
                 <Button 
                   size="sm"
-                  className="bg-gray-700/90 hover:bg-gray-600/90 text-white border border-gray-500 text-xs sm:text-sm"
+                  className="bg-green-800/90 hover:bg-green-700/90 text-white border border-green-600 text-xs sm:text-sm"
                   data-testid="button-upload-file"
                 >
                   <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                 <Button 
                   size="sm"
                   variant="outline"
-                  className={`border-gray-500 text-xs sm:text-sm ${isFavorited ? 'bg-red-500 text-white border-red-500' : 'text-white hover:bg-red-500/20'}`}
+                  className={`border-green-600 text-xs sm:text-sm ${isFavorited ? 'bg-green-600 text-white border-green-500' : 'text-green-400 hover:bg-green-600/20'}`}
                   onClick={() => setIsFavorited(!isFavorited)}
                   data-testid="button-favorite"
                 >
@@ -174,7 +174,7 @@ export default function ProfilePage() {
               </div>
               
               {/* Dashboard Stats - OnlyFans Style */}
-              <div className="flex gap-4 text-xs sm:text-sm text-gray-300 mt-2">
+              <div className="flex gap-4 text-xs sm:text-sm text-green-300 mt-2">
                 <div className="text-center">
                   <div className="font-semibold text-white">{profile.mediaCount || profile.images?.length || '0'}</div>
                   <div>Posts</div>
@@ -198,25 +198,25 @@ export default function ProfilePage() {
       </div>
 
       {/* Navigation Tabs - OnlyFans Style */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-green-800">
         <div className="px-4 sm:px-6">
           <Tabs defaultValue="posts" className="w-full">
             <TabsList className="bg-transparent border-none h-auto p-0 space-x-4 sm:space-x-8 w-full justify-start">
               <TabsTrigger 
                 value="posts" 
-                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-white font-medium text-sm sm:text-base"
+                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-green-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-foreground font-medium text-sm sm:text-base"
               >
                 Posts
               </TabsTrigger>
               <TabsTrigger 
                 value="tags"
-                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-gray-400 font-medium text-sm sm:text-base"
+                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-green-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-muted-foreground font-medium text-sm sm:text-base"
               >
                 Tags
               </TabsTrigger>
               <TabsTrigger 
                 value="linked"
-                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-gray-400 font-medium text-sm sm:text-base"
+                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-green-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-muted-foreground font-medium text-sm sm:text-base"
               >
                 Linked Accounts
               </TabsTrigger>

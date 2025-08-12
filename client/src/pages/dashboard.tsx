@@ -110,11 +110,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-6xl mx-auto p-6">
+      <div className="container max-w-6xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-green-600 to-green-800 flex items-center justify-center">
               {user?.profileImageUrl ? (
                 <img
                   src={user.profileImageUrl}
@@ -122,80 +122,80 @@ export default function DashboardPage() {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <User className="w-6 h-6 text-white" />
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-bold">
+              <h1 className="text-xl sm:text-2xl font-bold">
                 Welcome back, {user?.firstName || user?.email?.split('@')[0] || 'User'}!
               </h1>
-              <p className="text-muted-foreground">Manage your favorites and explore new creators</p>
+              <p className="text-muted-foreground text-sm sm:text-base">Manage your favorites and explore new creators</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/">Browse Creators</Link>
             </Button>
             {user?.isAdmin && (
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link href="/admin">Admin Panel</Link>
               </Button>
             )}
-            <Button onClick={() => window.location.href = "/api/logout"}>
+            <Button onClick={() => window.location.href = "/api/logout"} className="w-full sm:w-auto">
               Log Out
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="favorites">
-              My Favorites ({favorites.length})
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-flex">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="favorites" className="text-xs sm:text-sm">
+              Favorites ({favorites.length})
             </TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs sm:text-sm">Activity</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Favorites</CardTitle>
-                  <Heart className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Favorites</CardTitle>
+                  <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{favorites.length}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{favorites.length}</div>
                   <p className="text-xs text-muted-foreground">Saved creators</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Profile Views</CardTitle>
-                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Profile Views</CardTitle>
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{userStats?.profileViews || 0}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{userStats?.profileViews || 0}</div>
                   <p className="text-xs text-muted-foreground">Views given</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Interactions</CardTitle>
-                  <ThumbsUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Interactions</CardTitle>
+                  <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{userStats?.interactions || 0}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{userStats?.interactions || 0}</div>
                   <p className="text-xs text-muted-foreground">Total interactions</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Member Since</CardTitle>
-                  <Star className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Member Since</CardTitle>
+                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl sm:text-2xl font-bold">
                     {user?.createdAt ? new Date(user.createdAt).getFullYear() : "2024"}
                   </div>
                   <p className="text-xs text-muted-foreground">Year joined</p>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {favorites.slice(0, 6).map((profile) => (
                       <div key={profile.id} className="group cursor-pointer">
                         <Link href={`/profile/${profile.id}`}>
@@ -263,16 +263,16 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="favorites" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">My Favorites</h2>
-              <Button variant="outline" asChild>
+          <TabsContent value="favorites" className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">My Favorites</h2>
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link href="/">Find More Creators</Link>
               </Button>
             </div>
 
             {favoritesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
                     <div className="h-48 bg-muted rounded-t-lg"></div>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                 {favorites.map((profile) => (
                   <div key={profile.id} className="group cursor-pointer">
                     <Link href={`/profile/${profile.id}`}>

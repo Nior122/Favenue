@@ -63,19 +63,21 @@ export default function Navigation() {
               </Button>
             </Link>
             
-            <Link href="/admin">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={`border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white ${
-                  location === "/admin" ? "bg-purple-600 text-white border-purple-500" : ""
-                }`}
-                data-testid="link-admin"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
-            </Link>
+            {isAuthenticated && typedUser?.isAdmin && (
+              <Link href="/admin">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className={`border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white ${
+                    location === "/admin" ? "bg-purple-600 text-white border-purple-500" : ""
+                  }`}
+                  data-testid="link-admin"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin
+                </Button>
+              </Link>
+            )}
             
             {isAuthenticated ? (
               <>

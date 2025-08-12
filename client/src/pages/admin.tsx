@@ -49,13 +49,18 @@ export default function AdminPage() {
   // Fetch profiles for admin management
   const { data: profiles = [], isLoading: profilesLoading } = useQuery<ProfileWithImages[]>({
     queryKey: ['/api/admin/profiles'],
-    enabled: isAuthenticated && user?.isAdmin,
+    enabled: !!(isAuthenticated && user?.isAdmin),
   });
 
   // Fetch admin stats
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{
+    totalProfiles: number;
+    totalFavorites: number;
+    totalViews: number;
+    totalUsers: number;
+  }>({
     queryKey: ['/api/admin/stats'],
-    enabled: isAuthenticated && user?.isAdmin,
+    enabled: !!(isAuthenticated && user?.isAdmin),
   });
 
   // Create profile form
@@ -294,7 +299,7 @@ export default function AdminPage() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{profiles.length}</div>
+                  <div className="text-2xl font-bold">{profiles?.length || 0}</div>
                   <p className="text-xs text-muted-foreground">Active creators</p>
                 </CardContent>
               </Card>
@@ -485,7 +490,7 @@ export default function AdminPage() {
                   </Card>
                 ))
               ) : (
-                profiles.map((profile) => (
+                profiles?.map((profile: ProfileWithImages) => (
                   <Card key={profile.id} className="overflow-hidden">
                     <div className="h-48 bg-muted relative">
                       {profile.images[0] && (

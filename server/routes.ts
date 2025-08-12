@@ -142,8 +142,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes - Allow access without authentication for testing
-  app.get('/api/admin/profiles', async (req, res) => {
+  // Admin middleware - Check if user is authenticated and is an admin
+  const isAdmin = async (req: any, res: any, next: any) => {
+    try {
+      // First check if user is authenticated
+      await isAuthenticated(req, res, () => {});
+      
+      // Then check if user is admin
+      const user = req.user as any;
+      if (!user?.claims?.sub) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Get user from database to check admin status
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+  };
+
+  // Admin routes - Require authentication and admin privileges
+  app.get('/api/admin/profiles', isAdmin, async (req, res) => {
     try {
       const profiles = await storage.getProfiles();
       res.json(profiles);
@@ -153,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/profiles', async (req, res) => {
+  app.post('/api/admin/profiles', isAdmin, async (req, res) => {
     try {
       const validatedData = insertProfileSchema.parse(req.body);
       const profile = await storage.createProfile(validatedData);
@@ -167,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/profiles/:id', async (req, res) => {
+  app.put('/api/admin/profiles/:id', isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const validatedData = insertProfileSchema.partial().parse(req.body);
@@ -187,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/profiles/:id', async (req, res) => {
+  app.delete('/api/admin/profiles/:id', isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const success = await storage.deleteProfile(id);
@@ -203,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/profile-images', async (req, res) => {
+  app.post('/api/admin/profile-images', isAdmin, async (req, res) => {
     try {
       const validatedData = insertProfileImageSchema.parse(req.body);
       const image = await storage.addProfileImage(validatedData);
@@ -217,13 +241,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/stats', async (req, res) => {
+  app.get('/api/admin/stats', isAdmin, async (req, res) => {
     try {
-      // Mock admin stats for now
+      // Calculate real stats from database
+      const allProfiles = await storage.getProfiles();
       const stats = {
-        totalFavorites: 42,
-        totalViews: 1250,
-        totalUsers: 15,
+        totalProfiles: allProfiles.length,
+        totalFavorites: 0, // Would need to implement favorites count
+        totalViews: allProfiles.reduce((sum, profile) => sum + parseInt(profile.viewsCount || '0'), 0),
+        totalUsers: 1, // Admin user for now
       };
       
       res.json(stats);

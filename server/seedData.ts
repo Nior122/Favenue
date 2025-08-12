@@ -111,21 +111,9 @@ export async function seedDatabase() {
     createdProfiles.push(profile);
   }
 
-  // Sample images for profiles (using placeholder URLs)
+  // Sample images for profiles (DISABLED - only manual images allowed)
   let imageCount = 0;
-  for (const profile of createdProfiles) {
-    // Add 2-4 images per profile
-    const imagesPerProfile = Math.floor(Math.random() * 3) + 2;
-    for (let i = 0; i < imagesPerProfile; i++) {
-      await storage.addProfileImage({
-        profileId: profile.id,
-        imageUrl: `https://picsum.photos/400/300?random=${profile.id}-${i}`,
-        isMainImage: i === 0,
-        order: i.toString()
-      });
-      imageCount++;
-    }
-  }
+  // No automatic placeholder images - only manual uploads
 
   console.log(`Seeded storage with ${createdProfiles.length} profiles and ${imageCount} images.`);
 }

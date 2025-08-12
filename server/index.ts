@@ -39,8 +39,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Seed database with sample data
-  await seedDatabase();
+  // Seed database with sample data (DISABLED - manual control only)
+  // await seedDatabase();
   
   // Create admin user for testing
   await createAdminUser();

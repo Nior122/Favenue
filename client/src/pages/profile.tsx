@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { Heart, Upload, Search } from "lucide-react";
+import { Heart, Upload, Search, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFavorited, setIsFavorited] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   
   const profileId = params?.id;
   
@@ -42,7 +43,11 @@ export default function ProfilePage() {
       "okay okay enough teasing... full video from this bj...",
       "my cleavage said to tell you( hi :)",
       "do we fuck w the side angle??",
-      "pov you're the fly that got trapped in my bathroom..."
+      "pov you're the fly that got trapped in my bathroom...",
+      "morning selfie vibes",
+      "shower time again...",
+      "bed time routine",
+      "just me being me"
     ];
     
     return Array.from({ length: 1336 }, (_, index) => ({
@@ -118,7 +123,7 @@ export default function ProfilePage() {
               (e.target as HTMLImageElement).src = `https://picsum.photos/1200/400?random=${profile.id}-cover`;
             }}
           />
-          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 bg-black/40"></div>
         </div>
         
         {/* Profile Content Overlay */}
@@ -176,7 +181,7 @@ export default function ProfilePage() {
       <div className="border-b border-gray-800">
         <div className="px-4 sm:px-6">
           <Tabs defaultValue="posts" className="w-full">
-            <TabsList className="bg-transparent border-none h-auto p-0 space-x-4 sm:space-x-8 w-full">
+            <TabsList className="bg-transparent border-none h-auto p-0 space-x-4 sm:space-x-8 w-full justify-start">
               <TabsTrigger 
                 value="posts" 
                 className="bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-400 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-white font-medium text-sm sm:text-base"
@@ -279,7 +284,7 @@ export default function ProfilePage() {
                   <div
                     key={post.id}
                     className="group cursor-pointer bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition-all duration-200"
-                    onClick={() => window.open(post.imageUrl, '_blank')}
+                    onClick={() => setSelectedPost(post)}
                     data-testid={`card-post-${post.id}`}
                   >
                     {/* Post Image */}
@@ -301,6 +306,11 @@ export default function ProfilePage() {
                       {/* Attachments Indicator - top right */}
                       <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-black/70 text-white text-xs px-1 py-0.5 sm:px-2 sm:py-1 rounded">
                         {post.attachments > 0 ? `${post.attachments} attachment${post.attachments > 1 ? 's' : ''}` : 'No attachments'}
+                      </div>
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <Eye className="w-6 h-6 text-white" />
                       </div>
                     </div>
                     
@@ -371,13 +381,13 @@ export default function ProfilePage() {
               </div>
             </TabsContent>
             
-            <TabsContent value="tags" className="mt-6">
+            <TabsContent value="tags" className="mt-6 px-4 sm:px-0">
               <div className="text-center py-12 text-gray-400">
                 <p>No tags available</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="linked" className="mt-6">
+            <TabsContent value="linked" className="mt-6 px-4 sm:px-0">
               <div className="text-center py-12 text-gray-400">
                 <p>No linked accounts</p>
               </div>
@@ -385,6 +395,27 @@ export default function ProfilePage() {
           </Tabs>
         </div>
       </div>
+
+      {/* Post Modal/Lightbox */}
+      {selectedPost && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedPost(null)}
+        >
+          <div className="max-w-2xl max-h-full overflow-auto">
+            <img
+              src={selectedPost.imageUrl}
+              alt={selectedPost.title}
+              className="w-full h-auto object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="bg-gray-900 p-4 text-white">
+              <p className="text-sm mb-2">{selectedPost.description}</p>
+              <p className="text-xs text-gray-400">{selectedPost.date}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

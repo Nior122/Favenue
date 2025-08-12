@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Search, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import Navigation from "@/components/Navigation";
-import ProfileModal from "@/components/ProfileModal";
 import { ProfileWithImages } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Home() {
-  const [selectedProfile, setSelectedProfile] = useState<ProfileWithImages | null>(null);
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
@@ -167,7 +167,7 @@ export default function Home() {
               <div
                 key={profile.id}
                 className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer"
-                onClick={() => setSelectedProfile(profile)}
+                onClick={() => setLocation(`/profile/${profile.id}`)}
               >
                 <div className="flex items-center space-x-4">
                   {/* Profile Image */}
@@ -269,14 +269,7 @@ export default function Home() {
         </Button>
       </div>
 
-      {/* Profile Modal */}
-      {selectedProfile && (
-        <ProfileModal
-          profile={selectedProfile}
-          isOpen={!!selectedProfile}
-          onClose={() => setSelectedProfile(null)}
-        />
-      )}
+
     </div>
   );
 }

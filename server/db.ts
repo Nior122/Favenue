@@ -5,9 +5,9 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-// Set a mock DATABASE_URL for compatibility with the db connection setup
+// Ensure DATABASE_URL is available
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = "postgresql://temp:temp@localhost:5432/temp";
+  throw new Error("DATABASE_URL is required. Please ensure the PostgreSQL database is properly configured.");
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });

@@ -145,6 +145,21 @@ export default function ProfilePage() {
                 {profile.name.toLowerCase().replace(/\s+/g, '')}
               </h1>
               
+              {/* Profile Stats */}
+              <div className="flex items-center gap-4 mb-3 text-sm">
+                <div className="flex items-center gap-1">
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>{(posts.length * 87 + (profile.images?.length || 0) * 234).toLocaleString()} likes</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Eye className="w-4 h-4" />
+                  <span>{(posts.length * 245 + (profile.images?.length || 0) * 1000).toLocaleString()} views</span>
+                </div>
+                <div className="text-gray-300">
+                  {posts.length} media
+                </div>
+              </div>
+              
               <div className="flex gap-3">
                 <Button 
                   size="sm" 

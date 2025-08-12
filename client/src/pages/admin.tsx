@@ -270,88 +270,88 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto p-6">
+      <div className="container max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage profiles and view analytics</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">Manage profiles and view analytics</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.location.href = "/"}>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => window.location.href = "/"} className="w-full sm:w-auto">
               Back to Site
             </Button>
-            <Button onClick={() => window.location.href = "/api/logout"}>
+            <Button onClick={() => window.location.href = "/api/logout"} className="w-full sm:w-auto">
               Logout
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="profiles">Profiles</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-flex">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="profiles" className="text-xs sm:text-sm">Profiles</TabsTrigger>
+            <TabsTrigger value="users" className="text-xs sm:text-sm">Users</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Profiles</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Profiles</CardTitle>
+                  <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{profiles?.length || 0}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{profiles?.length || 0}</div>
                   <p className="text-xs text-muted-foreground">Active creators</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Favorites</CardTitle>
-                  <Heart className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Favorites</CardTitle>
+                  <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats?.totalFavorites || 0}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{stats?.totalFavorites || 0}</div>
                   <p className="text-xs text-muted-foreground">User favorites</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Views</CardTitle>
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats?.totalViews || "N/A"}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{stats?.totalViews || "N/A"}</div>
                   <p className="text-xs text-muted-foreground">Profile views</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Active Users</CardTitle>
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{stats?.totalUsers || 0}</div>
                   <p className="text-xs text-muted-foreground">Registered users</p>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="profiles" className="space-y-6">
+          <TabsContent value="profiles" className="space-y-4 sm:space-y-6">
             {/* Profiles Management */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Profile Management</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <h2 className="text-xl sm:text-2xl font-bold">Profile Management</h2>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Profile
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto mx-4 sm:mx-0">
                   <DialogHeader>
                     <DialogTitle>Create New Profile</DialogTitle>
                     <DialogDescription>
@@ -360,7 +360,7 @@ export default function AdminPage() {
                   </DialogHeader>
                   <Form {...createForm}>
                     <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                           control={createForm.control}
                           name="name"
@@ -388,7 +388,7 @@ export default function AdminPage() {
                           )}
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                           control={createForm.control}
                           name="category"
@@ -445,7 +445,7 @@ export default function AdminPage() {
                           </FormItem>
                         )}
                       />
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
                           control={createForm.control}
                           name="profilePictureUrl"
@@ -493,17 +493,19 @@ export default function AdminPage() {
                           </FormItem>
                         )}
                       />
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-col sm:flex-row justify-end gap-2">
                         <Button 
                           type="button" 
                           variant="outline" 
                           onClick={() => setIsCreateDialogOpen(false)}
+                          className="w-full sm:w-auto"
                         >
                           Cancel
                         </Button>
                         <Button 
                           type="submit" 
                           disabled={createProfileMutation.isPending}
+                          className="w-full sm:w-auto"
                         >
                           {createProfileMutation.isPending ? "Creating..." : "Create Profile"}
                         </Button>
@@ -515,7 +517,7 @@ export default function AdminPage() {
             </div>
 
             {/* Profiles List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {profilesLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
@@ -552,11 +554,12 @@ export default function AdminPage() {
                           {profile.images.length} images
                         </span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEdit(profile)}
+                          className="w-full sm:w-auto flex-1"
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           Edit
@@ -566,6 +569,7 @@ export default function AdminPage() {
                           variant="outline"
                           onClick={() => handleDelete(profile.id)}
                           disabled={deleteProfileMutation.isPending}
+                          className="w-full sm:w-auto flex-1"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Delete

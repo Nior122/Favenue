@@ -106,8 +106,8 @@ export default function ProfilePage() {
     );
   }
 
-  const profileImage = profile.images?.[1]?.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
-  const coverImage = profile.images?.[0]?.imageUrl || `https://picsum.photos/1200/400?random=${profile.id}`;
+  const profileImage = profile.images?.[1]?.imageUrl || null;
+  const coverImage = profile.images?.[0]?.imageUrl || null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -115,14 +115,17 @@ export default function ProfilePage() {
       <div className="relative h-48 sm:h-64 overflow-hidden">
         {/* Cover Image with Dark Overlay */}
         <div className="absolute inset-0">
-          <img
-            src={coverImage}
-            alt="Cover"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://picsum.photos/1200/400?random=${profile.id}-cover`;
-            }}
-          />
+          {coverImage ? (
+            <img
+              src={coverImage}
+              alt="Cover"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+              <span className="text-gray-400">No Cover Image</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/50"></div>
         </div>
         
@@ -131,14 +134,17 @@ export default function ProfilePage() {
           <div className="flex items-end gap-4">
             {/* Profile Picture */}
             <div className="relative">
-              <img
-                src={profileImage}
-                alt={profile.name}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
-                }}
-              />
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt={profile.name}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white bg-gray-700 flex items-center justify-center">
+                  <span className="text-gray-400 text-xs">No Image</span>
+                </div>
+              )}
               {/* Verified Badge */}
               <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-full flex items-center justify-center border-2 border-white">
                 <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white fill-current" />
@@ -309,14 +315,17 @@ export default function ProfilePage() {
                   >
                     {/* Post Image */}
                     <div className="relative aspect-[3/4] bg-gray-800">
-                      <img
-                        src={post.imageUrl}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://picsum.photos/300/400?random=${post.id}`;
-                        }}
-                      />
+                      {post.imageUrl ? (
+                        <img
+                          src={post.imageUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">No Image</span>
+                        </div>
+                      )}
                       
                       {/* Date Overlay - top left */}
                       <div className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-black/70 text-white text-xs px-1 py-0.5 sm:px-2 sm:py-1 rounded">

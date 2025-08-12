@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit, Trash2, Users, Heart, Eye, Settings, Image } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Heart, Eye, Settings, Image as ImageIcon, X } from "lucide-react";
 import { insertProfileSchema, type Profile, type ProfileWithImages } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +33,8 @@ export default function AdminPage() {
   const [selectedProfile, setSelectedProfile] = useState<ProfileWithImages | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [isImageManagerOpen, setIsImageManagerOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -214,6 +216,72 @@ export default function AdminPage() {
     },
   });
 
+  // Bulk delete images mutation
+  const bulkDeleteImagesMutation = useMutation({
+    mutationFn: async ({ profileId, imageIds }: { profileId: string; imageIds: string[] }) => {
+      await apiRequest(`/api/admin/profiles/${profileId}/images/bulk`, {
+        method: 'DELETE',
+        body: { imageIds },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/profiles'] });
+      setSelectedImages([]);
+      toast({
+        title: "Success",
+        description: "Images deleted successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Session expired. Redirecting to login...",
+          variant: "destructive",
+        });
+        setTimeout(() => window.location.href = "/api/login", 1000);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete images",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete single image mutation
+  const deleteSingleImageMutation = useMutation({
+    mutationFn: async (imageId: string) => {
+      await apiRequest(`/api/admin/profile-images/${imageId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/profiles'] });
+      toast({
+        title: "Success",
+        description: "Image deleted successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Session expired. Redirecting to login...",
+          variant: "destructive",
+        });
+        setTimeout(() => window.location.href = "/api/login", 1000);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete image",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onCreateSubmit = (data: z.infer<typeof createProfileSchema>) => {
     createProfileMutation.mutate(data);
   };
@@ -238,6 +306,12 @@ export default function AdminPage() {
       isActive: profile.isActive,
     });
     setIsEditSheetOpen(true);
+  };
+
+  const handleManageImages = (profile: ProfileWithImages) => {
+    setSelectedProfile(profile);
+    setSelectedImages([]);
+    setIsImageManagerOpen(true);
   };
 
   const handleDelete = (profileId: string) => {
@@ -563,6 +637,15 @@ export default function AdminPage() {
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleManageImages(profile)}
+                          className="w-full sm:w-auto flex-1"
+                        >
+                          <ImageIcon className="w-3 h-3 mr-1" />
+                          Images
                         </Button>
                         <Button
                           size="sm"

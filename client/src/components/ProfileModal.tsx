@@ -31,11 +31,17 @@ export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isF
           {/* Profile Image & Gallery */}
           <div className="space-y-4">
             <div className="relative overflow-hidden rounded-lg">
-              <img
-                src={mainImage?.imageUrl || `https://picsum.photos/400/500?random=${profile.id}`}
-                alt={profile.name}
-                className="w-full h-96 object-cover"
-              />
+              {mainImage?.imageUrl ? (
+                <img
+                  src={mainImage.imageUrl}
+                  alt={profile.name}
+                  className="w-full h-96 object-cover"
+                />
+              ) : (
+                <div className="w-full h-96 bg-gray-800 flex items-center justify-center">
+                  <span className="text-gray-400">No Profile Image</span>
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="icon"

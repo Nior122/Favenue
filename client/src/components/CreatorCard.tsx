@@ -22,8 +22,8 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
     onView(profile);
   };
 
-  const coverImage = profile.images?.[0]?.imageUrl || `https://picsum.photos/600/400?random=${profile.id}`;
-  const profileImage = profile.images?.[1]?.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
+  const coverImage = profile.images?.[0]?.imageUrl || null;
+  const profileImage = profile.images?.[1]?.imageUrl || null;
   
   // Generate random favorite count between 10K-100K for demo
   const favoriteCount = Math.floor(Math.random() * 90000) + 10000;
@@ -32,14 +32,17 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
     <div className="onlyfans-card group cursor-pointer" onClick={handleView} data-testid="creator-card">
       {/* Card Background with Cover Image */}
       <div className="relative h-32 overflow-hidden rounded-lg">
-        <img
-          src={coverImage}
-          alt="Cover"
-          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = `https://picsum.photos/600/400?random=${profile.id}-cover`;
-          }}
-        />
+        {coverImage ? (
+          <img
+            src={coverImage}
+            alt="Cover"
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+            <span className="text-gray-400 text-sm">No Cover Image</span>
+          </div>
+        )}
         
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-black/20"></div>
@@ -67,14 +70,17 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
           <div className="flex items-center gap-3 w-full">
             {/* Profile Picture */}
             <div className="relative flex-shrink-0">
-              <img
-                src={profileImage}
-                alt={profile.name}
-                className="w-12 h-12 rounded-lg object-cover border-2 border-white/20"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`;
-                }}
-              />
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt={profile.name}
+                  className="w-12 h-12 rounded-lg object-cover border-2 border-white/20"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-gray-700 border-2 border-white/20 flex items-center justify-center">
+                  <span className="text-gray-400 text-xs">No Image</span>
+                </div>
+              )}
               {profile.isActive && (
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
               )}

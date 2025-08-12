@@ -33,6 +33,7 @@ export interface IStorage {
   addProfileImage(image: InsertProfileImage): Promise<ProfileImage>;
   getProfileImages(profileId: string): Promise<ProfileImage[]>;
   deleteProfileImage(id: string): Promise<boolean>;
+  updateProfileImage(id: string, imageData: Partial<InsertProfileImage>): Promise<ProfileImage | undefined>;
 
   // Favorite operations
   toggleFavorite(userId: string, profileId: string): Promise<boolean>;
@@ -216,6 +217,19 @@ export class MemStorage implements IStorage {
     return this.profileImages.delete(id);
   }
 
+  async updateProfileImage(id: string, imageData: Partial<InsertProfileImage>): Promise<ProfileImage | undefined> {
+    const existing = this.profileImages.get(id);
+    if (!existing) return undefined;
+
+    const updated: ProfileImage = {
+      ...existing,
+      ...imageData,
+    };
+    
+    this.profileImages.set(id, updated);
+    return updated;
+  }
+
   // Favorite operations
   async toggleFavorite(userId: string, profileId: string): Promise<boolean> {
     const favoriteKey = `${userId}:${profileId}`;
@@ -389,6 +403,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(profileImages.id, id))
       .returning();
     return !!result;
+  }
+
+  async updateProfileImage(id: string, imageData: Partial<InsertProfileImage>): Promise<ProfileImage | undefined> {
+    const [image] = await db
+      .update(profileImages)
+      .set(imageData)
+      .where(eq(profileImages.id, id))
+      .returning();
+    return image || undefined;
   }
 
   // Favorite operations

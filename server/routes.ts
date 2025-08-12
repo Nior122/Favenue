@@ -241,6 +241,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk delete images for a profile
+  app.delete('/api/admin/profiles/:profileId/images/bulk', isAdmin, async (req, res) => {
+    try {
+      const { profileId } = req.params;
+      const { imageIds } = req.body; // Array of image IDs to delete
+      
+      if (!Array.isArray(imageIds) || imageIds.length === 0) {
+        return res.status(400).json({ message: "imageIds must be a non-empty array" });
+      }
+      
+      // Delete multiple images
+      const deletePromises = imageIds.map(imageId => storage.deleteProfileImage(imageId));
+      await Promise.all(deletePromises);
+      
+      res.json({ message: `Successfully deleted ${imageIds.length} images` });
+    } catch (error) {
+      console.error("Error bulk deleting images:", error);
+      res.status(500).json({ message: "Failed to delete images" });
+    }
+  });
+
+  // Delete single image
+  app.delete('/api/admin/profile-images/:imageId', isAdmin, async (req, res) => {
+    try {
+      const { imageId } = req.params;
+      const success = await storage.deleteProfileImage(imageId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      res.json({ message: "Image deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      res.status(500).json({ message: "Failed to delete image" });
+    }
+  });
+
+  // Update image (e.g., change main image status or order)
+  app.put('/api/admin/profile-images/:imageId', isAdmin, async (req, res) => {
+    try {
+      const { imageId } = req.params;
+      const validatedData = insertProfileImageSchema.partial().parse(req.body);
+      const image = await storage.updateProfileImage(imageId, validatedData);
+      
+      if (!image) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      
+      res.json(image);
+    } catch (error) {
+      console.error("Error updating image:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid image data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update image" });
+    }
+  });
+
   app.get('/api/admin/stats', isAdmin, async (req, res) => {
     try {
       // Calculate real stats from database

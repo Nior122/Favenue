@@ -1,0 +1,185 @@
+{
+  "timestamp": "2025-08-13T22:58:04.423Z",
+  "environment": "replit-to-vercel-migration",
+  "source": {
+    "database": {
+      "type": "PostgreSQL (Neon)",
+      "url_host": "ep-gentle-unit-a2ez7er2.eu-central-1.aws.neon.tech",
+      "connection_string": "postgresql://neondb_owner:***@ep-gentle-unit-a2ez7er2.eu-central-1.aws.neon.tech/neondb?sslmode=require",
+      "tables": {
+        "profiles": {
+          "count": 1,
+          "sample_data": [
+            {
+              "id": "accaaa0a-ea77-46d0-8936-6bb5dab87c74",
+              "name": "bigtittygothegg",
+              "title": "Gothic Content Creator",
+              "category": "Alternative",
+              "profile_picture_url": "https://img.coomer.st/icons/onlyfans/bigtittygothegg",
+              "cover_photo_url": "https://img.coomer.st/banners/onlyfans/bigtittygothegg",
+              "created_at": "2025-08-13T21:54:08.085Z"
+            }
+          ]
+        },
+        "profile_images": {
+          "count": 37,
+          "sample_data": [
+            {
+              "id": "a43108f6-e817-40e3-9103-17a41542bf15",
+              "profile_id": "accaaa0a-ea77-46d0-8936-6bb5dab87c74",
+              "image_url": "https://img.coomer.st/thumbnail/data/04/69/0469ced3b4817cd03e47271499e5a2c364264bff856bd4b563d9b30c721200f7.jpg",
+              "is_main_image": true,
+              "order": "0",
+              "created_at": "2025-08-13T21:54:08.204Z"
+            },
+            {
+              "id": "921a1df1-bb6d-4b15-b4e5-dbee5ebb0f95",
+              "profile_id": "accaaa0a-ea77-46d0-8936-6bb5dab87c74",
+              "image_url": "https://img.coomer.st/thumbnail/data/0c/cb/0ccb195d2fa5b3042247bdd6cdff727ca8361bba93bdb0942268dfef37b9b3e0.jpg",
+              "is_main_image": false,
+              "order": "1",
+              "created_at": "2025-08-13T21:54:08.319Z"
+            },
+            {
+              "id": "9ff33858-3fd9-4974-8238-812d045c9fda",
+              "profile_id": "accaaa0a-ea77-46d0-8936-6bb5dab87c74",
+              "image_url": "https://img.coomer.st/thumbnail/data/0f/e2/0fe2d6ccf453b90603b4aaf7eaa79e1b6383654591048c8e65ec2a45029712e7.jpg",
+              "is_main_image": false,
+              "order": "2",
+              "created_at": "2025-08-13T21:54:08.431Z"
+            },
+            {
+              "id": "9776fb74-831e-455a-8b20-d8df78ad35d4",
+              "profile_id": "accaaa0a-ea77-46d0-8936-6bb5dab87c74",
+              "image_url": "https://img.coomer.st/thumbnail/data/1a/2a/1a2a825d6bd15fd751ac996034feb7e797b4f13a0cb8f5242d916387f46d7e20.jpg",
+              "is_main_image": false,
+              "order": "3",
+              "created_at": "2025-08-13T21:54:08.544Z"
+            },
+            {
+              "id": "9fd1d560-dd9c-4ca5-ad07-ad067d0895aa",
+              "profile_id": "accaaa0a-ea77-46d0-8936-6bb5dab87c74",
+              "image_url": "https://img.coomer.st/thumbnail/data/26/28/262802aa505082a318c0a7d108d13cf3bdd21cac70f71bc15dfc3788662163d6.jpg",
+              "is_main_image": false,
+              "order": "4",
+              "created_at": "2025-08-13T21:54:08.659Z"
+            }
+          ]
+        },
+        "users": {
+          "count": 1,
+          "admin_count": 1
+        }
+      }
+    },
+    "images": {
+      "storage_type": "external_cdn",
+      "hosting_provider": "img.coomer.st",
+      "total_images": 37,
+      "unique_urls": [
+        "img.coomer.st"
+      ],
+      "sample_urls": [
+        "https://img.coomer.st/thumbnail/data/04/69/0469ced3b4817cd03e47271499e5a2c364264bff856bd4b563d9b30c721200f7.jpg",
+        "https://img.coomer.st/thumbnail/data/0c/cb/0ccb195d2fa5b3042247bdd6cdff727ca8361bba93bdb0942268dfef37b9b3e0.jpg",
+        "https://img.coomer.st/thumbnail/data/0f/e2/0fe2d6ccf453b90603b4aaf7eaa79e1b6383654591048c8e65ec2a45029712e7.jpg",
+        "https://img.coomer.st/thumbnail/data/1a/2a/1a2a825d6bd15fd751ac996034feb7e797b4f13a0cb8f5242d916387f46d7e20.jpg",
+        "https://img.coomer.st/thumbnail/data/26/28/262802aa505082a318c0a7d108d13cf3bdd21cac70f71bc15dfc3788662163d6.jpg"
+      ],
+      "local_files": "none_found"
+    }
+  },
+  "target": {
+    "platform": "Vercel",
+    "database": {
+      "status": "needs_configuration",
+      "recommended": "Supabase PostgreSQL or Vercel Postgres",
+      "required_env_vars": [
+        "DATABASE_URL"
+      ]
+    },
+    "image_storage": {
+      "status": "needs_configuration",
+      "recommended": "Cloudinary",
+      "required_env_vars": [
+        "CLOUDINARY_URL",
+        "CLOUDINARY_CLOUD_NAME",
+        "CLOUDINARY_API_KEY",
+        "CLOUDINARY_API_SECRET"
+      ]
+    },
+    "current_deployment": {
+      "issue": "Empty database - no profiles or images visible",
+      "cause": "Missing DATABASE_URL or different database instance"
+    }
+  },
+  "migration_plan": {
+    "phase_1_database": {
+      "action": "Export and import database",
+      "source_tables": [
+        "users",
+        "profiles",
+        "profile_images",
+        "sessions"
+      ],
+      "method": "pg_dump -> pg_restore OR SQL insert statements",
+      "estimated_rows": 39,
+      "preserve_ids": true,
+      "preserve_timestamps": true
+    },
+    "phase_2_images": {
+      "action": "Migrate images to Cloudinary",
+      "source_count": 37,
+      "source_domains": [
+        "img.coomer.st"
+      ],
+      "target": "Cloudinary CDN",
+      "process": [
+        "1. Validate each image URL (HTTP 200, content-type image/*)",
+        "2. Download images with retry logic",
+        "3. Upload to Cloudinary with original filenames",
+        "4. Generate thumbnails and optimized versions",
+        "5. Update database with new Cloudinary URLs"
+      ],
+      "concurrency": 4,
+      "retry_policy": "3 retries with exponential backoff"
+    },
+    "phase_3_verification": {
+      "action": "Verify migration success",
+      "checks": [
+        "Profile count matches source",
+        "Image count matches source",
+        "All images accessible via new URLs",
+        "Profile page displays correctly",
+        "API endpoints return expected data"
+      ]
+    }
+  },
+  "safety_checks": {
+    "backup_plan": {
+      "database": "pg_dump of source database before migration",
+      "images": "JSON manifest of all original URLs and metadata",
+      "rollback_script": "Provided for emergency restoration"
+    },
+    "validation_rules": {
+      "image_size_limit": "20MB per image",
+      "allowed_formats": [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp"
+      ],
+      "url_validation": "HTTP 200 response required",
+      "content_type": "Must be image/*"
+    },
+    "risk_assessment": "LOW - External images, PostgreSQL to PostgreSQL migration"
+  },
+  "recommendations": {
+    "database_target": "Supabase (free tier) or Vercel Postgres",
+    "image_storage": "Cloudinary (generous free tier)",
+    "migration_timing": "Off-peak hours recommended",
+    "testing": "Test with subset of images first",
+    "monitoring": "Monitor Cloudinary usage during migration"
+  }
+}

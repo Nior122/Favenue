@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "vite build",
+  "buildCommand": "npm run db:push && node scripts/seed-standalone.js && vite build",
   "outputDirectory": "dist/public"
 }

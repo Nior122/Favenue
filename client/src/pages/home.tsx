@@ -173,9 +173,13 @@ export default function Home() {
                   {/* Profile Image */}
                   <div className="relative">
                     <img
-                      src={profile.images[0]?.imageUrl || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face'}
+                      src={profile.images?.[0]?.imageUrl || profile.profilePictureUrl || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face'}
                       alt={profile.name}
                       className="w-20 h-20 rounded-lg object-cover"
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        img.src = 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face';
+                      }}
                     />
                     <div className="absolute top-1 right-1">
                       <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
@@ -189,8 +193,11 @@ export default function Home() {
                     <h3 className="text-white text-xl font-semibold mb-1">
                       {profile.name}
                     </h3>
-                    <div className="text-gray-400 text-sm">
-                      {Math.floor(Math.random() * 100000)} favorites
+                    <div className="text-gray-400 text-sm mb-1">
+                      {profile.title} • {profile.category}
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      {profile.images?.length || 0} images • {profile.likesCount} likes
                     </div>
                   </div>
 

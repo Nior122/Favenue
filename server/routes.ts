@@ -1,13 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated as replitAuth } from "./replitAuth";
+import { setupProdAuth, isAuthenticated as prodAuth, isAdmin as prodAdmin } from "./prodAuth";
 import { insertProfileSchema, insertProfileImageSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Use different auth based on environment
+const isProduction = process.env.NODE_ENV === "production" || !process.env.REPL_ID;
+const isAuthenticated = isProduction ? prodAuth : replitAuth;
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Auth middleware - use different auth based on environment
+  if (isProduction) {
+    setupProdAuth(app);
+  } else {
+    await setupAuth(app);
+  }
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -142,8 +151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin middleware - Check if user is authenticated and is an admin
-  const isAdmin = async (req: any, res: any, next: any) => {
+  // Admin middleware - use different admin check based on environment
+  const isAdmin = isProduction ? prodAdmin : async (req: any, res: any, next: any) => {
     try {
       // First check if user is authenticated
       await isAuthenticated(req, res, () => {});

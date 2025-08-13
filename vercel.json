@@ -1,13 +1,17 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run db:push && node scripts/seed-standalone.js && npm run build",
   "outputDirectory": "dist/public",
   "functions": {
-    "api/*.js": {
+    "dist/index.js": {
       "runtime": "nodejs20.x"
     }
   },
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/dist/index.js"
+    },
     {
       "src": "/(.*)",
       "dest": "/index.html"

@@ -2,14 +2,15 @@ import { storage } from './storage';
 import { nanoid } from 'nanoid';
 
 export async function seedDatabase() {
-  // Check if data already exists
-  const existingProfiles = await storage.getProfiles({ limit: 1 });
-  if (existingProfiles.length > 0) {
-    console.log('Storage already has data, skipping seed.');
-    return;
-  }
+  try {
+    // Check if data already exists
+    const existingProfiles = await storage.getProfiles({ limit: 1 });
+    if (existingProfiles.length > 0) {
+      console.log('Storage already has data, skipping seed.');
+      return;
+    }
 
-  console.log('Seeding storage with bigtittygothegg profile...');
+    console.log('Seeding storage with bigtittygothegg profile...');
 
   // Create the bigtittygothegg profile
   const bigtittygotheggProfile = {
@@ -88,4 +89,11 @@ export async function seedDatabase() {
   }
 
   console.log(`Seeded storage with 1 profile (${profile.name}) and ${imageCount} images.`);
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    // In production, we want to continue even if seeding fails
+    if (process.env.NODE_ENV !== 'production') {
+      throw error;
+    }
+  }
 }

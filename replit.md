@@ -6,7 +6,7 @@ CreatorHub is a full-stack web application redesigned as an adult content creato
 
 **Latest Update (August 13, 2025)**: Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database setup. Created PostgreSQL database with all required tables using Drizzle ORM. Application now runs cleanly on port 5000 with proper database connections. Added new profile "bigtittygothegg" with 37 gallery images using provided URLs for profile photo, cover photo, and complete image gallery. All dependencies properly configured and working correctly.
 
-**Deployment Planning**: User wants to deploy to Vercel with GitHub integration. Need to plan for: (1) Photo upload service integration (Cloudinary/AWS S3), (2) Authentication replacement (NextAuth.js), (3) Vercel-optimized build configuration, (4) Environment variable management, (5) Admin panel for content management.
+**Deployment Planning**: User wants to deploy to Vercel with GitHub integration using URL-based image management. Plan includes: (1) Enhanced admin panel with bulk URL upload interface, (2) Authentication replacement (NextAuth.js), (3) Vercel-optimized build configuration, (4) Environment variable management, (5) Professional content management dashboard. User prefers external image hosting with URL-only management - no cloud storage needed.
 
 ## User Preferences
 

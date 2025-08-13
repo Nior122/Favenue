@@ -16,20 +16,20 @@ This document outlines the steps needed to deploy CreatorHub to Vercel with GitH
 
 #### 1. Photo Upload System
 **Current**: Direct URL references to external images
-**Needed**: Cloud storage integration
+**Production Solution**: Enhanced URL-based admin panel
 
-**Recommended Solution: Cloudinary**
-- Adult-content friendly
-- Built-in image optimization
-- CDN included
-- Free tier: 25GB storage, 25GB bandwidth
-- Easy upload widget integration
+**Recommended Approach: URL Upload Interface**
+- Keep using external image hosting (your choice of provider)
+- Build admin dashboard for bulk URL management
+- Automatic image validation and preview
+- Batch upload multiple URLs at once
+- No storage costs - use your existing hosting
 
 **Implementation Steps**:
-1. Sign up for Cloudinary account
-2. Add upload widget to admin panel
-3. Store Cloudinary URLs in database
-4. Add image transformation on-the-fly
+1. Create enhanced admin panel with URL input fields
+2. Add bulk upload form for multiple images
+3. Include image preview and validation
+4. Auto-save to database with proper ordering
 
 #### 2. Authentication System
 **Current**: Replit Auth (won't work on Vercel)
@@ -53,11 +53,12 @@ This document outlines the steps needed to deploy CreatorHub to Vercel with GitH
 
 ## Implementation Roadmap
 
-### Phase 1: Photo Upload Integration (Week 1)
-- [ ] Set up Cloudinary account
-- [ ] Create upload component for admin panel
-- [ ] Update profile creation form with image upload
-- [ ] Test image optimization and delivery
+### Phase 1: Enhanced Admin Panel (Week 1)
+- [ ] Build URL-based image upload interface
+- [ ] Create bulk URL input form (paste multiple URLs)
+- [ ] Add image preview and validation
+- [ ] Build profile management dashboard
+- [ ] Test batch upload functionality
 
 ### Phase 2: Authentication Migration (Week 1-2)
 - [ ] Install NextAuth.js
@@ -114,15 +115,15 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 ### Free Tier Options:
 - **Vercel**: Free for personal use
-- **Neon Database**: Free tier (1GB storage)
-- **Cloudinary**: Free tier (25GB)
+- **Neon Database**: Free tier (1GB storage)  
+- **Image Hosting**: Your external provider (cost varies)
 - **NextAuth.js**: Free
 
 ### Paid Tier (Production):
 - **Vercel Pro**: $20/month (team features)
 - **Neon Pro**: $19/month (10GB storage)
-- **Cloudinary**: $89/month (200GB storage)
-- **Total**: ~$128/month
+- **Image Hosting**: Your external provider
+- **Total**: ~$39/month + image hosting costs
 
 ## Next Steps
 

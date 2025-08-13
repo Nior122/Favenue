@@ -54,7 +54,7 @@ async function verifyBuildProcess() {
     await runCommand('npm', ['run', 'db:push']);
     
     // Step 3: Seed database
-    await runCommand('node', ['scripts/seed-standalone.js']);
+    await runCommand('tsx', ['scripts/seed-standalone.js']);
     
     // Step 4: Build application
     await runCommand('npm', ['run', 'build']);

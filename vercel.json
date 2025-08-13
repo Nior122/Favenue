@@ -1,20 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm run db:push && node scripts/seed-standalone.js && npm run build",
-  "outputDirectory": "dist/public",
-  "functions": {
-    "dist/index.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/dist/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "buildCommand": "npm run db:push && node scripts/seed-standalone.js && vite build",
+  "outputDirectory": "dist/public"
 }

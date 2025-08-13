@@ -10,7 +10,8 @@ neonConfig.webSocketConstructor = ws;
 
 // Ensure DATABASE_URL is available
 if (!process.env.DATABASE_URL) {
-  console.log("DATABASE_URL not found, skipping seed");
+  console.log("⚠️ DATABASE_URL not found, skipping database seeding for static deployment");
+  console.log("✅ Static frontend will be deployed without backend database operations");
   process.exit(0);
 }
 

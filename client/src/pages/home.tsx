@@ -13,20 +13,26 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: allProfiles = [], isLoading } = useQuery<ProfileWithImages[]>({
+  const { data: allProfiles = [], isLoading, error } = useQuery<ProfileWithImages[]>({
     queryKey: ["/api/profiles"],
     queryFn: async () => {
+      console.log('🔍 Fetching profiles...');
       const response = await fetch('/api/profiles', {
         credentials: 'include',
       });
       
       if (!response.ok) {
+        console.error('❌ API Error:', response.status, await response.text());
         throw new Error(`${response.status}: ${await response.text()}`);
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log('✅ Profiles loaded:', data.length, data);
+      return data;
     }
   });
+
+  console.log('🏠 Home component state:', { isLoading, allProfiles: allProfiles.length, error });
 
   // Filter and paginate profiles
   const filteredProfiles = allProfiles.filter(profile => 
@@ -58,6 +64,20 @@ export default function Home() {
     }
     return pages;
   };
+
+  console.log('🎯 Rendering with profiles:', profiles.length);
+
+  if (error) {
+    console.error('💥 Query error:', error);
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl mb-4">Error Loading Profiles</h1>
+          <p className="text-red-400">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">

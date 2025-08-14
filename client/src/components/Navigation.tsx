@@ -19,9 +19,7 @@ export default function Navigation() {
             <div className="ml-10 flex items-baseline space-x-6">
               <Link href="/">
                 <span 
-                  className={`text-green-300 hover:text-green-100 px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer ${
-                    location === "/" ? "text-green-100" : ""
-                  }`}
+                  className="text-green-300 hover:text-green-100 px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer"
                   data-testid="link-browse"
                 >
                   Models

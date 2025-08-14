@@ -22,8 +22,8 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
     onView(profile);
   };
 
-  const coverImage = profile.images?.[0]?.imageUrl || null;
-  const profileImage = profile.images?.[1]?.imageUrl || null;
+  const coverImage = profile.coverPhotoUrl || profile.images?.[0]?.imageUrl || null;
+  const profileImage = profile.profilePictureUrl || profile.images?.[0]?.imageUrl || null;
   
   // Generate random favorite count between 10K-100K for demo
   const favoriteCount = Math.floor(Math.random() * 90000) + 10000;

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Search, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import CreatorCard from "@/components/CreatorCard";
 import { ProfileWithImages } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,59 +183,18 @@ export default function Home() {
             <p className="text-gray-400 text-xl">No profiles found</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {profiles.map((profile) => (
-              <div
+              <CreatorCard
                 key={profile.id}
-                className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer"
-                onClick={() => setLocation(`/profile/${profile.id}`)}
-              >
-                <div className="flex items-center space-x-4">
-                  {/* Profile Image */}
-                  <div className="relative">
-                    <img
-                      src={profile.images?.[0]?.imageUrl || profile.profilePictureUrl || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face'}
-                      alt={profile.name}
-                      className="w-20 h-20 rounded-lg object-cover"
-                      onError={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        img.src = 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face';
-                      }}
-                    />
-                    <div className="absolute top-1 right-1">
-                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                        OnlyFans
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Profile Info */}
-                  <div className="flex-1">
-                    <h3 className="text-white text-xl font-semibold mb-1">
-                      {profile.name}
-                    </h3>
-                    <div className="text-gray-400 text-sm mb-1">
-                      {profile.title} • {profile.category}
-                    </div>
-                    <div className="text-gray-500 text-xs">
-                      {profile.images?.length || 0} images • {profile.likesCount} likes
-                    </div>
-                  </div>
-
-                  {/* Favorite Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Handle favorite toggle
-                    }}
-                  >
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+                profile={profile}
+                onView={(profile) => {
+                  setLocation(`/profile/${profile.id}`);
+                }}
+                onFavorite={(profileId) => {
+                  console.log('Favorited profile:', profileId);
+                }}
+              />
             ))}
           </div>
         )}

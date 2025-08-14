@@ -4,7 +4,7 @@
 
 CreatorHub is a full-stack web application redesigned as an adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories. The application features a dark-themed React frontend with adult content platform styling, Node.js/Express backend, PostgreSQL database integration via Drizzle ORM, and Replit authentication for user management.
 
-**Latest Update (August 14, 2025)**: Successfully completed migration from Replit Agent to standard Replit environment. Resolved DATABASE_URL configuration issue by creating PostgreSQL database and pushing schema via Drizzle. All PostgreSQL tables properly created and seeded with bigtittygothegg profile data (37 gallery images). Application running cleanly on port 5000 with proper database connections and API endpoints responding. Migration completed with client/server separation maintained and security best practices followed. **Fixed Vercel deployment issue completely**: Created serverless API functions (`/api/profiles.js`, `/api/profiles/[id].js`, `/api/seed.js`, `/api/auth/user.js`) to handle database operations on Vercel. Updated vercel.json configuration for proper serverless deployment with both frontend and backend support. Profiles now properly load on Vercel deployments through serverless functions.
+**Latest Update (August 14, 2025)**: **MAJOR ARCHITECTURE CHANGE**: Successfully removed PostgreSQL database and converted to file-based content management system. Application now uses JSON files in `/data` directory for all content storage, eliminating database costs and complexity. Content is managed directly through GitHub commits - users can add posts by creating JSON files in the repository. Migration completed with 3 sample posts created for bigtittygothegg profile. Application running cleanly on port 5000 with file storage, ready for GitHub-based content workflow.
 
 **Deployment Status**: **FIXED Vercel Build Issues**: Created comprehensive PR to resolve database-related build failures. Separated DB operations from build process with GitHub Actions CI/CD pipeline. Updated Vercel configuration to only run build commands. Created complete deployment documentation with step-by-step setup guides. Database seeding and migrations now handled via automated CI/CD workflow. Vercel builds will succeed with proper environment variable configuration.
 
@@ -29,26 +29,23 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error middleware with proper HTTP status codes
 - **Session Management**: Express sessions with PostgreSQL storage using connect-pg-simple
 
-### Database Design
-- **Database**: PostgreSQL with connection pooling via Neon serverless
-- **ORM**: Drizzle ORM for type-safe database operations
-- **Schema**: Well-structured relational design with proper foreign key relationships
-- **Key Tables**:
-  - `users`: User authentication and profile information
-  - `profiles`: Professional profiles with categories, ratings, and metadata
-  - `profile_images`: Image gallery system with foreign key relationships
-  - `user_favorites`: Many-to-many relationship for user favorites
-  - `sessions`: Session storage for authentication persistence
+### Content Management System
+- **Storage**: File-based JSON storage in `/data` directory
+- **No Database**: Removed PostgreSQL completely - no hosting costs
+- **GitHub Workflow**: Content managed by editing JSON files in repository
+- **Key Files**:
+  - `data/profiles.json`: Main profiles data
+  - `data/posts/[profileId]/`: Individual post JSON files
+  - **Structure**: Each post has title, description, imageUrl, tags, and metadata
+- **Deployment**: Static files deploy automatically with Vercel
 
-### Authentication & Authorization
-- **Provider**: Replit Auth using OpenID Connect (OIDC)
-- **Session Strategy**: Server-side sessions with secure HTTP-only cookies
-- **Security**: CSRF protection, secure cookie configuration, and proper session management
-- **User Management**: Automatic user creation/updates on successful authentication
-- **Admin System**: Role-based access control with admin-only routes
-- **Admin Panel**: Full CRUD operations for profile management, user analytics dashboard
-- **User Dashboard**: Personal favorites management, activity tracking, and account overview
-- **Test Admin**: Created admin@creatorhub.test user for testing admin functionality
+### Content Management
+- **File-Based**: All content stored in JSON files committed to GitHub
+- **Manual Upload**: Posts added by creating JSON files in `data/posts/[profileId]/` directory
+- **No Authentication**: Simplified for static deployment (no user accounts needed)
+- **GitHub Workflow**: Edit files → Commit → Automatic Vercel deployment
+- **Scripts**: Helper scripts for local development (`scripts/add-post.js`, `scripts/add-profile.js`)
+- **Version Control**: Full content history tracked in Git
 
 ### File Structure
 - **Monorepo Layout**: Organized into `client/`, `server/`, and `shared/` directories

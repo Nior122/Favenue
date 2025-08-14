@@ -1,8 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./staticRoutes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedDatabase } from "./seedData";
-import { createAdminUser } from "./seedAdmin";
 
 const app = express();
 app.use(express.json());
@@ -39,13 +37,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Seed database with bigtittygothegg profile
-  await seedDatabase();
+  console.log('📁 Using file-based storage (no database needed)');
   
-  // Create admin user for testing
-  await createAdminUser();
-  
-  const server = await registerRoutes(app);
+  const server = registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

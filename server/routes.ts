@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { fileStorage } from "./fileStorage";
 import { setupAuth, isAuthenticated as replitAuth } from "./replitAuth";
 import { setupProdAuth, isAuthenticated as prodAuth, isAdmin as prodAdmin } from "./prodAuth";
 import { insertProfileSchema, insertProfileImageSchema } from "@shared/schema";

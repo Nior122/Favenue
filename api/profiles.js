@@ -1,39 +1,70 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+// Vercel serverless function for profiles using file storage
+import fs from 'fs';
+import path from 'path';
 
-neonConfig.webSocketConstructor = ws;
+// File storage functions for Vercel
+async function getProfiles() {
+  try {
+    // Read profiles from data directory
+    const profilesPath = path.join(process.cwd(), 'data', 'profiles.json');
+    const profilesData = fs.readFileSync(profilesPath, 'utf-8');
+    const profiles = JSON.parse(profilesData);
+    
+    // Read posts for each profile
+    const profilesWithImages = [];
+    
+    for (const profile of profiles) {
+      const posts = await getProfilePosts(profile.id);
+      const images = posts.map(post => ({
+        id: post.id,
+        profileId: post.profileId,
+        imageUrl: post.imageUrl,
+        isMainImage: post.isMainImage,
+        order: post.order.toString(),
+        createdAt: new Date(post.createdAt)
+      }));
+      
+      profilesWithImages.push({
+        ...profile,
+        images
+      });
+    }
+    
+    return profilesWithImages;
+  } catch (error) {
+    console.error('Error reading profiles:', error);
+    return [];
+  }
+}
 
-// Schema definitions for serverless functions
-const profilesTable = {
-  id: 'id',
-  name: 'name',
-  title: 'title',
-  category: 'category',
-  location: 'location',
-  description: 'description',
-  profilePictureUrl: 'profile_picture_url',
-  coverPhotoUrl: 'cover_photo_url',
-  rating: 'rating',
-  reviewCount: 'review_count',
-  likesCount: 'likes_count',
-  mediaCount: 'media_count',
-  viewsCount: 'views_count',
-  subscribersCount: 'subscribers_count',
-  tags: 'tags',
-  isActive: 'is_active',
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
-};
-
-const profileImagesTable = {
-  id: 'id',
-  profileId: 'profile_id', 
-  imageUrl: 'image_url',
-  isMainImage: 'is_main_image',
-  order: 'order',
-  createdAt: 'created_at'
-};
+async function getProfilePosts(profileId) {
+  try {
+    const postsDir = path.join(process.cwd(), 'data', 'posts', profileId);
+    
+    // Check if directory exists
+    if (!fs.existsSync(postsDir)) {
+      return [];
+    }
+    
+    const files = fs.readdirSync(postsDir);
+    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    
+    const posts = [];
+    
+    for (const file of jsonFiles) {
+      const filePath = path.join(postsDir, file);
+      const postData = fs.readFileSync(filePath, 'utf-8');
+      const post = JSON.parse(postData);
+      posts.push(post);
+    }
+    
+    // Sort by order
+    return posts.sort((a, b) => a.order - b.order);
+  } catch (error) {
+    console.error(`Error reading posts for profile ${profileId}:`, error);
+    return [];
+  }
+}
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -45,53 +76,19 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (!process.env.DATABASE_URL) {
-    return res.status(500).json({ 
-      message: 'Database not configured',
-      profiles: [] 
-    });
-  }
-
   try {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const db = drizzle({ client: pool });
-
     if (req.method === 'GET') {
-      // Get all profiles with their images
-      const profiles = await db.execute(`
-        SELECT 
-          p.*,
-          COALESCE(
-            json_agg(
-              json_build_object(
-                'id', pi.id,
-                'imageUrl', pi.image_url,
-                'isMainImage', pi.is_main_image,
-                'order', pi."order"
-              ) ORDER BY pi."order"::int
-            ) FILTER (WHERE pi.id IS NOT NULL), 
-            '[]'::json
-          ) as images
-        FROM profiles p
-        LEFT JOIN profile_images pi ON p.id = pi.profile_id
-        WHERE p.is_active = true
-        GROUP BY p.id
-        ORDER BY p.created_at DESC
-      `);
-
-      await pool.end();
-      return res.status(200).json(profiles.rows || []);
+      const profiles = await getProfiles();
+      return res.status(200).json(profiles);
     }
 
-    await pool.end();
     return res.status(405).json({ message: 'Method not allowed' });
 
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('API error:', error);
     return res.status(500).json({ 
       message: 'Internal server error',
-      error: error.message,
-      profiles: []
+      error: error.message
     });
   }
 }

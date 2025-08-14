@@ -1,8 +1,66 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+// Vercel serverless function for single profile using file storage
+import fs from 'fs';
+import path from 'path';
 
-neonConfig.webSocketConstructor = ws;
+async function getProfile(id) {
+  try {
+    // Read profiles from data directory
+    const profilesPath = path.join(process.cwd(), 'data', 'profiles.json');
+    const profilesData = fs.readFileSync(profilesPath, 'utf-8');
+    const profiles = JSON.parse(profilesData);
+    
+    const profile = profiles.find(p => p.id === id);
+    if (!profile) return null;
+    
+    // Read posts for this profile
+    const posts = await getProfilePosts(id);
+    const images = posts.map(post => ({
+      id: post.id,
+      profileId: post.profileId,
+      imageUrl: post.imageUrl,
+      isMainImage: post.isMainImage,
+      order: post.order.toString(),
+      createdAt: new Date(post.createdAt)
+    }));
+    
+    return {
+      ...profile,
+      images
+    };
+  } catch (error) {
+    console.error('Error reading profile:', error);
+    return null;
+  }
+}
+
+async function getProfilePosts(profileId) {
+  try {
+    const postsDir = path.join(process.cwd(), 'data', 'posts', profileId);
+    
+    // Check if directory exists
+    if (!fs.existsSync(postsDir)) {
+      return [];
+    }
+    
+    const files = fs.readdirSync(postsDir);
+    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    
+    const posts = [];
+    
+    for (const file of jsonFiles) {
+      const filePath = path.join(postsDir, file);
+      const postData = fs.readFileSync(filePath, 'utf-8');
+      const post = JSON.parse(postData);
+      posts.push(post);
+    }
+    
+    // Sort by order
+    return posts.sort((a, b) => a.order - b.order);
+  } catch (error) {
+    console.error(`Error reading posts for profile ${profileId}:`, error);
+    return [];
+  }
+}
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -14,54 +72,23 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (!process.env.DATABASE_URL) {
-    return res.status(500).json({ 
-      message: 'Database not configured'
-    });
-  }
-
   const { id } = req.query;
 
   try {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const db = drizzle({ client: pool });
-
     if (req.method === 'GET') {
-      // Get single profile with images
-      const result = await db.execute(`
-        SELECT 
-          p.*,
-          COALESCE(
-            json_agg(
-              json_build_object(
-                'id', pi.id,
-                'imageUrl', pi.image_url,
-                'isMainImage', pi.is_main_image,
-                'order', pi."order"
-              ) ORDER BY pi."order"::int
-            ) FILTER (WHERE pi.id IS NOT NULL), 
-            '[]'::json
-          ) as images
-        FROM profiles p
-        LEFT JOIN profile_images pi ON p.id = pi.profile_id
-        WHERE p.id = $1 AND p.is_active = true
-        GROUP BY p.id
-      `, [id]);
-
-      await pool.end();
+      const profile = await getProfile(id);
       
-      if (result.rows.length === 0) {
+      if (!profile) {
         return res.status(404).json({ message: 'Profile not found' });
       }
-
-      return res.status(200).json(result.rows[0]);
+      
+      return res.status(200).json(profile);
     }
 
-    await pool.end();
     return res.status(405).json({ message: 'Method not allowed' });
 
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('API error:', error);
     return res.status(500).json({ 
       message: 'Internal server error',
       error: error.message

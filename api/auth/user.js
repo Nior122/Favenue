@@ -1,3 +1,4 @@
+// Vercel serverless function for auth (simplified for file storage)
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,10 +9,15 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method === 'GET') {
-    // For Vercel deployment, return unauthorized since Replit Auth won't work
+  try {
+    // Return unauthorized for file-based deployment (no auth needed)
     return res.status(401).json({ message: 'Unauthorized' });
-  }
 
-  return res.status(405).json({ message: 'Method not allowed' });
+  } catch (error) {
+    console.error('Auth error:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
 }

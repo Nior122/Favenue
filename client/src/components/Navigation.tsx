@@ -1,9 +1,6 @@
-import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Navigation() {
-  const [location] = useLocation();
 
   return (
     <nav className="bg-black border-b border-green-900 sticky top-0 z-50">
@@ -43,19 +40,7 @@ export default function Navigation() {
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <Link href="/dashboard">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={`border-green-600 text-green-300 hover:bg-green-900 hover:text-green-100 text-xs sm:text-sm ${
-                  location === "/dashboard" ? "bg-green-600 text-white border-green-500" : ""
-                }`}
-                data-testid="link-dashboard"
-              >
-                <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </Button>
-            </Link>
+            {/* Authentication buttons removed */}
           </div>
         </div>
       </div>

@@ -316,9 +316,18 @@ export default function ProfilePage() {
                         {post.attachments > 0 ? `${post.attachments} attachment${post.attachments > 1 ? 's' : ''}` : 'No attachments'}
                       </div>
 
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                        <Eye className="w-6 h-6 text-white" />
+                      {/* Click to View Overlay - covers most of the image */}
+                      <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                        <Button 
+                          size="lg"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 text-sm sm:text-base"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPost(post);
+                          }}
+                        >
+                          Click to view
+                        </Button>
                       </div>
                     </div>
                     

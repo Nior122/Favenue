@@ -16,8 +16,20 @@
   ],
   "routes": [
     {
+      "src": "/api/profiles",
+      "dest": "/api/profiles.js"
+    },
+    {
+      "src": "/api/profiles/([^/]+)",
+      "dest": "/api/profiles/$1.js"
+    },
+    {
+      "src": "/api/auth/user",
+      "dest": "/api/auth/user.js"
+    },
+    {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api/$1.js"
     },
     {
       "handle": "filesystem"

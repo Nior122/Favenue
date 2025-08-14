@@ -4,27 +4,55 @@ import path from 'path';
 
 async function getProfile(id) {
   try {
-    // Read profiles from data directory
-    const profilesPath = path.join(process.cwd(), 'data', 'profiles.json');
-    const profilesData = fs.readFileSync(profilesPath, 'utf-8');
-    const profiles = JSON.parse(profilesData);
+    const profileDir = path.join(process.cwd(), 'data', id);
     
-    const profile = profiles.find(p => p.id === id);
-    if (!profile) return null;
+    // Check if profile directory exists
+    if (!fs.existsSync(profileDir)) {
+      return null;
+    }
+    
+    // Load profile info
+    const profileFile = path.join(profileDir, 'profile.json');
+    let profileData;
+    try {
+      const profileContent = fs.readFileSync(profileFile, 'utf-8');
+      profileData = JSON.parse(profileContent);
+    } catch {
+      // Fallback to default structure if no profile.json
+      profileData = { 
+        name: id,
+        title: "Content Creator",
+        category: "General",
+        description: `Content from ${id}`,
+        profilePictureUrl: "",
+        coverPhotoUrl: "",
+        rating: "4.5",
+        reviewCount: "100",
+        likesCount: "1000",
+        viewsCount: "10000",
+        subscribersCount: "500",
+        tags: [],
+        isActive: true
+      };
+    }
     
     // Read posts for this profile
     const posts = await getProfilePosts(id);
-    const images = posts.map(post => ({
-      id: post.id,
-      profileId: post.profileId,
+    const images = posts.map((post, index) => ({
+      id: `${id}-${index + 1}`,
+      profileId: id,
       imageUrl: post.imageUrl,
-      isMainImage: post.isMainImage,
-      order: post.order.toString(),
-      createdAt: new Date(post.createdAt)
+      isMainImage: index === 0,
+      order: (index + 1).toString(),
+      createdAt: new Date().toISOString()
     }));
     
     return {
-      ...profile,
+      id,
+      ...profileData,
+      mediaCount: posts.length.toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       images
     };
   } catch (error) {
@@ -35,27 +63,30 @@ async function getProfile(id) {
 
 async function getProfilePosts(profileId) {
   try {
-    const postsDir = path.join(process.cwd(), 'data', 'posts', profileId);
+    const profileDir = path.join(process.cwd(), 'data', profileId);
     
     // Check if directory exists
-    if (!fs.existsSync(postsDir)) {
+    if (!fs.existsSync(profileDir)) {
       return [];
     }
     
-    const files = fs.readdirSync(postsDir);
-    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    const files = fs.readdirSync(profileDir);
+    const postFiles = files.filter(file => file.endsWith('.json') && file !== 'profile.json');
     
     const posts = [];
     
-    for (const file of jsonFiles) {
-      const filePath = path.join(postsDir, file);
-      const postData = fs.readFileSync(filePath, 'utf-8');
-      const post = JSON.parse(postData);
-      posts.push(post);
+    for (const file of postFiles) {
+      try {
+        const filePath = path.join(profileDir, file);
+        const postData = fs.readFileSync(filePath, 'utf-8');
+        const post = JSON.parse(postData);
+        posts.push(post);
+      } catch (error) {
+        console.warn(`⚠️ Error reading post file ${file}:`, error);
+      }
     }
     
-    // Sort by order
-    return posts.sort((a, b) => a.order - b.order);
+    return posts;
   } catch (error) {
     console.error(`Error reading posts for profile ${profileId}:`, error);
     return [];

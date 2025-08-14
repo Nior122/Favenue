@@ -10,6 +10,9 @@ import { z } from "zod";
 const isProduction = process.env.NODE_ENV === "production" || !process.env.REPL_ID;
 const isAuthenticated = isProduction ? prodAuth : replitAuth;
 
+// Use fileStorage as the storage implementation
+const storage = fileStorage;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware - use different auth based on environment
   if (isProduction) {

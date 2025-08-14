@@ -5,61 +5,104 @@ import path from 'path';
 // File storage functions for Vercel
 async function getProfiles() {
   try {
-    // Read profiles from data directory
-    const profilesPath = path.join(process.cwd(), 'data', 'profiles.json');
-    const profilesData = fs.readFileSync(profilesPath, 'utf-8');
-    const profiles = JSON.parse(profilesData);
+    console.log('📂 Loading profiles from data folder...');
     
-    // Read posts for each profile
-    const profilesWithImages = [];
+    // Get all profile folders from data directory
+    const dataDir = path.join(process.cwd(), 'data');
+    const entries = fs.readdirSync(dataDir, { withFileTypes: true });
+    const profileDirs = entries
+      .filter(entry => entry.isDirectory())
+      .map(entry => entry.name);
     
-    for (const profile of profiles) {
-      const posts = await getProfilePosts(profile.id);
-      const images = posts.map(post => ({
-        id: post.id,
-        profileId: post.profileId,
-        imageUrl: post.imageUrl,
-        isMainImage: post.isMainImage,
-        order: post.order.toString(),
-        createdAt: new Date(post.createdAt)
-      }));
-      
-      profilesWithImages.push({
-        ...profile,
-        images
-      });
+    const profiles = [];
+    
+    for (const profileId of profileDirs) {
+      try {
+        const profileDir = path.join(dataDir, profileId);
+        
+        // Load profile info
+        const profileFile = path.join(profileDir, 'profile.json');
+        let profileData;
+        try {
+          const profileContent = fs.readFileSync(profileFile, 'utf-8');
+          profileData = JSON.parse(profileContent);
+        } catch {
+          // Fallback to default structure if no profile.json
+          profileData = { 
+            name: profileId,
+            title: "Content Creator",
+            category: "General",
+            description: `Content from ${profileId}`,
+            profilePictureUrl: "",
+            coverPhotoUrl: "",
+            rating: "4.5",
+            reviewCount: "100",
+            likesCount: "1000",
+            viewsCount: "10000",
+            subscribersCount: "500",
+            tags: [],
+            isActive: true
+          };
+        }
+        
+        // Load posts for this profile
+        const posts = await getProfilePosts(profileId);
+        const images = posts.map((post, index) => ({
+          id: `${profileId}-${index + 1}`,
+          profileId: profileId,
+          imageUrl: post.imageUrl,
+          isMainImage: index === 0,
+          order: (index + 1).toString(),
+          createdAt: new Date().toISOString()
+        }));
+        
+        profiles.push({
+          id: profileId,
+          ...profileData,
+          mediaCount: posts.length.toString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          images
+        });
+      } catch (error) {
+        console.warn(`⚠️ Error loading profile ${profileId}:`, error);
+      }
     }
     
-    return profilesWithImages;
+    console.log(`✅ Loaded ${profiles.length} profiles from data folders`);
+    return profiles;
   } catch (error) {
-    console.error('Error reading profiles:', error);
+    console.error('❌ Error loading profiles:', error);
     return [];
   }
 }
 
 async function getProfilePosts(profileId) {
   try {
-    const postsDir = path.join(process.cwd(), 'data', 'posts', profileId);
+    const profileDir = path.join(process.cwd(), 'data', profileId);
     
     // Check if directory exists
-    if (!fs.existsSync(postsDir)) {
+    if (!fs.existsSync(profileDir)) {
       return [];
     }
     
-    const files = fs.readdirSync(postsDir);
-    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    const files = fs.readdirSync(profileDir);
+    const postFiles = files.filter(file => file.endsWith('.json') && file !== 'profile.json');
     
     const posts = [];
     
-    for (const file of jsonFiles) {
-      const filePath = path.join(postsDir, file);
-      const postData = fs.readFileSync(filePath, 'utf-8');
-      const post = JSON.parse(postData);
-      posts.push(post);
+    for (const file of postFiles) {
+      try {
+        const filePath = path.join(profileDir, file);
+        const postData = fs.readFileSync(filePath, 'utf-8');
+        const post = JSON.parse(postData);
+        posts.push(post);
+      } catch (error) {
+        console.warn(`⚠️ Error reading post file ${file}:`, error);
+      }
     }
     
-    // Sort by order
-    return posts.sort((a, b) => a.order - b.order);
+    return posts;
   } catch (error) {
     console.error(`Error reading posts for profile ${profileId}:`, error);
     return [];

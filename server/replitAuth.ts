@@ -6,7 +6,7 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import MemoryStore from "memorystore";
-import { storage } from "./storage";
+import { fileStorage } from "./fileStorage";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -56,7 +56,7 @@ async function upsertUser(
 ) {
   // Grant admin privileges to all authenticated users
   // This makes any logged-in Replit user an admin
-  await storage.upsertUser({
+  await fileStorage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],

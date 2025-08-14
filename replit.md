@@ -34,10 +34,11 @@ Preferred communication style: Simple, everyday language.
 - **No Database**: Removed PostgreSQL completely - no hosting costs
 - **GitHub Workflow**: Content managed by editing JSON files in repository
 - **Key Files**:
-  - `data/profiles.json`: Main profiles data
-  - `data/posts/[profileId]/`: Individual post JSON files
+  - `data/[profileId]/profile.json`: Individual profile data
+  - `data/[profileId]/post-*.json`: Individual post JSON files per profile
   - **Structure**: Each post has title, description, imageUrl, tags, and metadata
 - **Deployment**: Static files deploy automatically with Vercel
+- **API Endpoints**: Both local and Vercel deployment support `/api/profiles` and `/api/profiles/[id]`
 
 ### Content Management
 - **File-Based**: All content stored in JSON files committed to GitHub

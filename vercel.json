@@ -21,7 +21,7 @@
     },
     {
       "src": "/api/profiles/([^/]+)",
-      "dest": "/api/profiles/$1.js"
+      "dest": "/api/profiles/[id].js?id=$1"
     },
     {
       "src": "/api/auth/user",

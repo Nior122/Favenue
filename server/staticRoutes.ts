@@ -6,7 +6,7 @@ export function registerRoutes(app: Express): Server {
   // Profile routes - now using file storage
   app.get('/api/profiles', async (req, res) => {
     try {
-      const profiles = await fileStorage.getProfiles();
+      const profiles = await fileStorage.getAllProfiles();
       res.json(profiles);
     } catch (error) {
       console.error("Error fetching profiles:", error);

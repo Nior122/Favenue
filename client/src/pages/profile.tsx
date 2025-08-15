@@ -30,6 +30,7 @@ export default function ProfilePage() {
   const [unlockingImages, setUnlockingImages] = useState<Set<string>>(new Set());
   const [viewedImages, setViewedImages] = useState<Set<string>>(new Set());
   const [verifyingImages, setVerifyingImages] = useState<Set<string>>(new Set());
+  const [failedVerification, setFailedVerification] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   
   const profileId = params?.id;
@@ -45,6 +46,7 @@ export default function ProfilePage() {
       setUnlockingImages(new Set());
       setViewedImages(new Set());
       setVerifyingImages(new Set());
+      setFailedVerification(new Set());
     };
   }, []);
 
@@ -60,6 +62,22 @@ export default function ProfilePage() {
         title: "Still verifying",
         description: "Click the link and spend 10 seconds on the verification page. If not, image won't open.",
         duration: 8000,
+      });
+    } else if (failedVerification.has(post.id)) {
+      // Image verification failed, show failure message
+      toast({
+        title: "Verification failed",
+        description: "You didn't spend enough time on the verification page. Try unlocking again.",
+        duration: 8000,
+      });
+      // Allow user to try again
+      setPendingPost(post);
+      setShowUnlockPopup(true);
+      // Remove from failed set so they can try again
+      setFailedVerification(prev => {
+        const newSet = new Set(Array.from(prev));
+        newSet.delete(post.id);
+        return newSet;
       });
     } else {
       // Image is locked or already viewed, show unlock popup
@@ -98,9 +116,11 @@ export default function ProfilePage() {
               newSet.delete(postId);
               return newSet;
             });
+            setFailedVerification(prev => new Set(Array.from(prev).concat(postId)));
+            
             toast({
-              title: "Verification failed",
-              description: "You must click the link and spend 10 seconds on the verification page. Image won't open.",
+              title: "Verification failed - Window closed early",
+              description: "You must click the link and spend 10 seconds on the verification page. Image locked.",
               duration: 8000,
             });
           }
@@ -142,12 +162,23 @@ export default function ProfilePage() {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             clearInterval(checkInterval);
           } else if (visitStartTime && timeSpent < 10000) {
-            // User returned too early
-            toast({
-              title: "Not enough time spent",
-              description: `You only spent ${Math.round(timeSpent/1000)} seconds. Need 10 seconds minimum.`,
-              duration: 5000,
+            // User returned too early - mark as failed verification
+            setVerifyingImages(prev => {
+              const newSet = new Set(Array.from(prev));
+              newSet.delete(postId);
+              return newSet;
             });
+            setFailedVerification(prev => new Set(Array.from(prev).concat(postId)));
+            
+            toast({
+              title: "Verification failed - Not enough time",
+              description: `You only spent ${Math.round(timeSpent/1000)} seconds. Need 10 seconds minimum. Image locked.`,
+              duration: 8000,
+            });
+            
+            // Cleanup
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(checkInterval);
           }
         } else if (document.hidden && !visitStartTime) {
           // User left our page (presumably to visit verification link)
@@ -484,17 +515,17 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Click to View Overlay - covers most of the image */}
-                      <div className={`absolute inset-0 ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-black/30 hover:bg-black/50' : verifyingImages.has(post.id) ? 'bg-black/70' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
+                      <div className={`absolute inset-0 ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-black/30 hover:bg-black/50' : verifyingImages.has(post.id) ? 'bg-black/70' : failedVerification.has(post.id) ? 'bg-red-900/80' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
                         <Button 
                           size="lg"
-                          className={`${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-green-600 hover:bg-green-700' : verifyingImages.has(post.id) ? 'bg-yellow-600 hover:bg-yellow-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
+                          className={`${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-green-600 hover:bg-green-700' : verifyingImages.has(post.id) ? 'bg-yellow-600 hover:bg-yellow-700' : failedVerification.has(post.id) ? 'bg-red-600 hover:bg-red-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleImageClick(post);
                           }}
                           disabled={unlockingImages.has(post.id) || verifyingImages.has(post.id)}
                         >
-                          {(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? "View Image" : verifyingImages.has(post.id) ? "Verifying..." : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
+                          {(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? "View Image" : verifyingImages.has(post.id) ? "Verifying..." : failedVerification.has(post.id) ? "Not enough time - Try again" : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
                         </Button>
                       </div>
                     </div>

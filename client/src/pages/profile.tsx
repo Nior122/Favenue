@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Heart, Search, Eye } from "lucide-react";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileWithImages } from "@shared/schema";
+import UnlockPopup from "@/components/UnlockPopup";
 
 interface Post {
   id: string;
@@ -22,8 +23,55 @@ export default function ProfilePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFavorited, setIsFavorited] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [showUnlockPopup, setShowUnlockPopup] = useState(false);
+  const [pendingPost, setPendingPost] = useState<Post | null>(null);
+  const [unlockedImages, setUnlockedImages] = useState<Set<string>>(new Set());
   
   const profileId = params?.id;
+
+  // Load unlocked images from localStorage on component mount
+  useEffect(() => {
+    if (profileId) {
+      const stored = localStorage.getItem(`unlocked-images-${profileId}`);
+      if (stored) {
+        setUnlockedImages(new Set(JSON.parse(stored)));
+      }
+    }
+  }, [profileId]);
+
+  // Save unlocked images to localStorage whenever it changes
+  useEffect(() => {
+    if (profileId && unlockedImages.size > 0) {
+      localStorage.setItem(`unlocked-images-${profileId}`, JSON.stringify(Array.from(unlockedImages)));
+    }
+  }, [unlockedImages, profileId]);
+
+  const handleImageClick = (post: Post) => {
+    if (unlockedImages.has(post.id)) {
+      // Image is already unlocked, show it directly
+      setSelectedPost(post);
+    } else {
+      // Image is locked, show unlock popup
+      setPendingPost(post);
+      setShowUnlockPopup(true);
+    }
+  };
+
+  const handleUnlock = () => {
+    if (pendingPost) {
+      // Add this image to unlocked set
+      setUnlockedImages(prev => new Set(Array.from(prev).concat(pendingPost.id)));
+      // Show the image
+      setSelectedPost(pendingPost);
+      // Clear pending
+      setPendingPost(null);
+    }
+  };
+
+  const handleCloseUnlockPopup = () => {
+    setShowUnlockPopup(false);
+    setPendingPost(null);
+  };
   
   // Fetch profile data
   const { data: profile, isLoading } = useQuery<ProfileWithImages>({
@@ -317,16 +365,16 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Click to View Overlay - covers most of the image */}
-                      <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                      <div className={`absolute inset-0 ${unlockedImages.has(post.id) ? 'bg-black/30 hover:bg-black/50' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
                         <Button 
                           size="lg"
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 text-sm sm:text-base"
+                          className={`${unlockedImages.has(post.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedPost(post);
+                            handleImageClick(post);
                           }}
                         >
-                          Click to view
+                          {unlockedImages.has(post.id) ? "View Image" : "Click to view"}
                         </Button>
                       </div>
                     </div>
@@ -433,6 +481,14 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Unlock Popup */}
+      <UnlockPopup
+        isOpen={showUnlockPopup}
+        onClose={handleCloseUnlockPopup}
+        onUnlock={handleUnlock}
+        postTitle={pendingPost?.title}
+      />
     </div>
   );
 }

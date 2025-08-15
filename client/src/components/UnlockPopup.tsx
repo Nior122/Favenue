@@ -14,7 +14,7 @@ export default function UnlockPopup({ isOpen, onClose, onUnlock, postTitle }: Un
     // Open the unlock link in a new tab
     window.open('https://loadingup.vercel.app/', '_blank');
     
-    // Mark this image as unlocked
+    // Mark this image as unlocked (this will start the 5-second timer)
     onUnlock();
     
     // Close the popup

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileWithImages } from "@shared/schema";
 import UnlockPopup from "@/components/UnlockPopup";
+import { useToast } from "@/hooks/use-toast";
 
 interface Post {
   id: string;
@@ -26,6 +27,8 @@ export default function ProfilePage() {
   const [showUnlockPopup, setShowUnlockPopup] = useState(false);
   const [pendingPost, setPendingPost] = useState<Post | null>(null);
   const [unlockedImages, setUnlockedImages] = useState<Set<string>>(new Set());
+  const [unlockingImages, setUnlockingImages] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
   
   const profileId = params?.id;
 
@@ -59,12 +62,39 @@ export default function ProfilePage() {
 
   const handleUnlock = () => {
     if (pendingPost) {
-      // Add this image to unlocked set
-      setUnlockedImages(prev => new Set(Array.from(prev).concat(pendingPost.id)));
-      // Show the image
-      setSelectedPost(pendingPost);
-      // Clear pending
-      setPendingPost(null);
+      const postId = pendingPost.id;
+      
+      // Add this image to unlocking set
+      setUnlockingImages(prev => new Set(Array.from(prev).concat(postId)));
+      
+      // Show toast notification
+      toast({
+        title: "Unlocking content...",
+        description: "Please wait 5 seconds for the image to be available.",
+        duration: 5000,
+      });
+      
+      // Wait 5 seconds before showing the image
+      setTimeout(() => {
+        // Add to unlocked images
+        setUnlockedImages(prev => new Set(Array.from(prev).concat(postId)));
+        // Remove from unlocking
+        setUnlockingImages(prev => {
+          const newSet = new Set(Array.from(prev));
+          newSet.delete(postId);
+          return newSet;
+        });
+        // Show the image
+        setSelectedPost(pendingPost);
+        setPendingPost(null);
+        
+        // Show success toast
+        toast({
+          title: "Content unlocked!",
+          description: "You can now view this image anytime.",
+          duration: 3000,
+        });
+      }, 5000);
     }
   };
 
@@ -365,16 +395,17 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Click to View Overlay - covers most of the image */}
-                      <div className={`absolute inset-0 ${unlockedImages.has(post.id) ? 'bg-black/30 hover:bg-black/50' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
+                      <div className={`absolute inset-0 ${unlockedImages.has(post.id) ? 'bg-black/30 hover:bg-black/50' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
                         <Button 
                           size="lg"
-                          className={`${unlockedImages.has(post.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
+                          className={`${unlockedImages.has(post.id) ? 'bg-green-600 hover:bg-green-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleImageClick(post);
                           }}
+                          disabled={unlockingImages.has(post.id)}
                         >
-                          {unlockedImages.has(post.id) ? "View Image" : "Click to view"}
+                          {unlockedImages.has(post.id) ? "View Image" : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
                         </Button>
                       </div>
                     </div>

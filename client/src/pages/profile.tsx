@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { Heart, Search, Eye } from "lucide-react";
+import { Heart, Search, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -511,7 +511,20 @@ export default function ProfilePage() {
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={handleCloseImageModal}
         >
-          <div className="max-w-2xl max-h-full overflow-auto">
+          <div className="max-w-2xl max-h-full overflow-auto relative">
+            {/* Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseImageModal();
+              }}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+            
             <img
               src={selectedPost.imageUrl}
               alt={selectedPost.title}

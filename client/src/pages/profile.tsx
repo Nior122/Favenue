@@ -28,33 +28,32 @@ export default function ProfilePage() {
   const [pendingPost, setPendingPost] = useState<Post | null>(null);
   const [unlockedImages, setUnlockedImages] = useState<Set<string>>(new Set());
   const [unlockingImages, setUnlockingImages] = useState<Set<string>>(new Set());
+  const [viewedImages, setViewedImages] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   
   const profileId = params?.id;
 
-  // Load unlocked images from localStorage on component mount
-  useEffect(() => {
-    if (profileId) {
-      const stored = localStorage.getItem(`unlocked-images-${profileId}`);
-      if (stored) {
-        setUnlockedImages(new Set(JSON.parse(stored)));
-      }
-    }
-  }, [profileId]);
+  // Remove localStorage persistence - images should re-lock after viewing
+  // Don't save unlocked state anymore since we want pay-per-view behavior
 
-  // Save unlocked images to localStorage whenever it changes
+  // Clear unlocked images when component unmounts (user navigates away)
   useEffect(() => {
-    if (profileId && unlockedImages.size > 0) {
-      localStorage.setItem(`unlocked-images-${profileId}`, JSON.stringify(Array.from(unlockedImages)));
-    }
-  }, [unlockedImages, profileId]);
+    return () => {
+      // Cleanup when component unmounts - reset all unlock states
+      setUnlockedImages(new Set());
+      setUnlockingImages(new Set());
+      setViewedImages(new Set());
+    };
+  }, []);
 
   const handleImageClick = (post: Post) => {
-    if (unlockedImages.has(post.id)) {
-      // Image is already unlocked, show it directly
+    if (unlockedImages.has(post.id) && !viewedImages.has(post.id)) {
+      // Image is unlocked but not yet viewed, show it directly
       setSelectedPost(post);
+      // Mark as viewed so it will lock again after closing
+      setViewedImages(prev => new Set(Array.from(prev).concat(post.id)));
     } else {
-      // Image is locked, show unlock popup
+      // Image is locked or already viewed, show unlock popup
       setPendingPost(post);
       setShowUnlockPopup(true);
     }
@@ -86,6 +85,8 @@ export default function ProfilePage() {
         });
         // Show the image
         setSelectedPost(pendingPost);
+        // Mark as viewed so it will lock again after closing
+        setViewedImages(prev => new Set(Array.from(prev).concat(postId)));
         setPendingPost(null);
         
         // Show success toast
@@ -101,6 +102,18 @@ export default function ProfilePage() {
   const handleCloseUnlockPopup = () => {
     setShowUnlockPopup(false);
     setPendingPost(null);
+  };
+
+  const handleCloseImageModal = () => {
+    if (selectedPost && viewedImages.has(selectedPost.id)) {
+      // Remove the image from unlocked set so it locks again
+      setUnlockedImages(prev => {
+        const newSet = new Set(Array.from(prev));
+        newSet.delete(selectedPost.id);
+        return newSet;
+      });
+    }
+    setSelectedPost(null);
   };
   
   // Fetch profile data
@@ -395,17 +408,17 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Click to View Overlay - covers most of the image */}
-                      <div className={`absolute inset-0 ${unlockedImages.has(post.id) ? 'bg-black/30 hover:bg-black/50' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
+                      <div className={`absolute inset-0 ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-black/30 hover:bg-black/50' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
                         <Button 
                           size="lg"
-                          className={`${unlockedImages.has(post.id) ? 'bg-green-600 hover:bg-green-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
+                          className={`${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-green-600 hover:bg-green-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleImageClick(post);
                           }}
                           disabled={unlockingImages.has(post.id)}
                         >
-                          {unlockedImages.has(post.id) ? "View Image" : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
+                          {(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? "View Image" : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
                         </Button>
                       </div>
                     </div>
@@ -496,7 +509,7 @@ export default function ProfilePage() {
       {selectedPost && (
         <div 
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedPost(null)}
+          onClick={handleCloseImageModal}
         >
           <div className="max-w-2xl max-h-full overflow-auto">
             <img

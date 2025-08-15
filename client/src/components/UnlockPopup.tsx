@@ -63,7 +63,7 @@ export default function UnlockPopup({ isOpen, onClose, onUnlock, postTitle }: Un
           </div>
 
           <div className="text-xs text-gray-500 text-center">
-            You'll be redirected to complete verification. After completing, this content will be unlocked permanently.
+            You'll be redirected to complete verification. After viewing, the content will lock again for future viewing.
           </div>
         </div>
       </DialogContent>

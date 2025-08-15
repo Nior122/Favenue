@@ -29,6 +29,7 @@ export default function ProfilePage() {
   const [unlockedImages, setUnlockedImages] = useState<Set<string>>(new Set());
   const [unlockingImages, setUnlockingImages] = useState<Set<string>>(new Set());
   const [viewedImages, setViewedImages] = useState<Set<string>>(new Set());
+  const [verifyingImages, setVerifyingImages] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   
   const profileId = params?.id;
@@ -43,6 +44,7 @@ export default function ProfilePage() {
       setUnlockedImages(new Set());
       setUnlockingImages(new Set());
       setViewedImages(new Set());
+      setVerifyingImages(new Set());
     };
   }, []);
 
@@ -63,39 +65,96 @@ export default function ProfilePage() {
     if (pendingPost) {
       const postId = pendingPost.id;
       
-      // Add this image to unlocking set
-      setUnlockingImages(prev => new Set(Array.from(prev).concat(postId)));
+      // Add this image to verifying set (waiting for user to visit link)
+      setVerifyingImages(prev => new Set(Array.from(prev).concat(postId)));
       
       // Show toast notification
       toast({
-        title: "Unlocking content...",
-        description: "Please wait 5 seconds for the image to be available.",
-        duration: 5000,
+        title: "Visit the verification link",
+        description: "Stay on the page for 5 seconds to unlock the content.",
+        duration: 8000,
       });
+
+      // Check if user actually visited the unlock page
+      const unlockWindow = window.open('https://loadingup.vercel.app/', '_blank');
       
-      // Wait 5 seconds before showing the image
+      // Use focus/blur events to detect if user actually visits the page
+      let visitStartTime: number | null = null;
+      let isVerified = false;
+      
+      const checkInterval = setInterval(() => {
+        if (unlockWindow?.closed) {
+          // User closed the window before verification
+          if (!isVerified) {
+            setVerifyingImages(prev => {
+              const newSet = new Set(Array.from(prev));
+              newSet.delete(postId);
+              return newSet;
+            });
+            toast({
+              title: "Verification incomplete",
+              description: "You must stay on the verification page for 5 seconds to unlock content.",
+              duration: 5000,
+            });
+          }
+          clearInterval(checkInterval);
+          return;
+        }
+      }, 1000);
+
+      // Listen for when user returns to our page (blur/focus)
+      const handleVisibilityChange = () => {
+        if (!document.hidden && visitStartTime) {
+          const timeSpent = Date.now() - visitStartTime;
+          if (timeSpent >= 5000 && !isVerified) {
+            isVerified = true;
+            
+            // Add to unlocked images after verification
+            setUnlockedImages(prev => new Set(Array.from(prev).concat(postId)));
+            // Remove from verifying
+            setVerifyingImages(prev => {
+              const newSet = new Set(Array.from(prev));
+              newSet.delete(postId);
+              return newSet;
+            });
+            
+            // Show the image
+            setSelectedPost(pendingPost);
+            // Mark as viewed so it will lock again after closing
+            setViewedImages(prev => new Set(Array.from(prev).concat(postId)));
+            setPendingPost(null);
+            
+            // Show success toast
+            toast({
+              title: "Content unlocked!",
+              description: "Verification completed successfully.",
+              duration: 3000,
+            });
+            
+            // Cleanup
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(checkInterval);
+          }
+        } else if (document.hidden && !visitStartTime) {
+          // User left our page (presumably to visit verification link)
+          visitStartTime = Date.now();
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Fallback cleanup after 2 minutes
       setTimeout(() => {
-        // Add to unlocked images
-        setUnlockedImages(prev => new Set(Array.from(prev).concat(postId)));
-        // Remove from unlocking
-        setUnlockingImages(prev => {
-          const newSet = new Set(Array.from(prev));
-          newSet.delete(postId);
-          return newSet;
-        });
-        // Show the image
-        setSelectedPost(pendingPost);
-        // Mark as viewed so it will lock again after closing
-        setViewedImages(prev => new Set(Array.from(prev).concat(postId)));
-        setPendingPost(null);
-        
-        // Show success toast
-        toast({
-          title: "Content unlocked!",
-          description: "You can now view this image anytime.",
-          duration: 3000,
-        });
-      }, 5000);
+        if (!isVerified) {
+          setVerifyingImages(prev => {
+            const newSet = new Set(Array.from(prev));
+            newSet.delete(postId);
+            return newSet;
+          });
+        }
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        clearInterval(checkInterval);
+      }, 120000);
     }
   };
 
@@ -408,17 +467,17 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Click to View Overlay - covers most of the image */}
-                      <div className={`absolute inset-0 ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-black/30 hover:bg-black/50' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
+                      <div className={`absolute inset-0 ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-black/30 hover:bg-black/50' : verifyingImages.has(post.id) ? 'bg-black/70' : unlockingImages.has(post.id) ? 'bg-black/70' : 'bg-black/80'} flex items-center justify-center transition-all duration-200`}>
                         <Button 
                           size="lg"
-                          className={`${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-green-600 hover:bg-green-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
+                          className={`${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'bg-green-600 hover:bg-green-700' : verifyingImages.has(post.id) ? 'bg-yellow-600 hover:bg-yellow-700' : unlockingImages.has(post.id) ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold px-6 py-3 text-sm sm:text-base`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleImageClick(post);
                           }}
-                          disabled={unlockingImages.has(post.id)}
+                          disabled={unlockingImages.has(post.id) || verifyingImages.has(post.id)}
                         >
-                          {(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? "View Image" : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
+                          {(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? "View Image" : verifyingImages.has(post.id) ? "Verifying..." : unlockingImages.has(post.id) ? "Unlocking..." : "Click to view"}
                         </Button>
                       </div>
                     </div>

@@ -63,7 +63,7 @@ export default function UnlockPopup({ isOpen, onClose, onUnlock, postTitle }: Un
           </div>
 
           <div className="text-xs text-gray-500 text-center">
-            You'll be redirected to complete verification. After viewing, the content will lock again for future viewing.
+            You'll be redirected to verification. You must stay on the page for 5 seconds to unlock content. After viewing, content locks again.
           </div>
         </div>
       </DialogContent>

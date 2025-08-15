@@ -54,6 +54,13 @@ export default function ProfilePage() {
       setSelectedPost(post);
       // Mark as viewed so it will lock again after closing
       setViewedImages(prev => new Set(Array.from(prev).concat(post.id)));
+    } else if (verifyingImages.has(post.id)) {
+      // Image is still being verified, show warning
+      toast({
+        title: "Still verifying",
+        description: "Click the link and spend 10 seconds on the verification page. If not, image won't open.",
+        duration: 8000,
+      });
     } else {
       // Image is locked or already viewed, show unlock popup
       setPendingPost(post);
@@ -70,9 +77,9 @@ export default function ProfilePage() {
       
       // Show toast notification
       toast({
-        title: "Visit the verification link",
-        description: "Stay on the page for 5 seconds to unlock the content.",
-        duration: 8000,
+        title: "Click the link and stay for 10 seconds",
+        description: "If you don't spend at least 10 seconds on the verification page, the image won't unlock.",
+        duration: 10000,
       });
 
       // Check if user actually visited the unlock page
@@ -92,9 +99,9 @@ export default function ProfilePage() {
               return newSet;
             });
             toast({
-              title: "Verification incomplete",
-              description: "You must stay on the verification page for 5 seconds to unlock content.",
-              duration: 5000,
+              title: "Verification failed",
+              description: "You must click the link and spend 10 seconds on the verification page. Image won't open.",
+              duration: 8000,
             });
           }
           clearInterval(checkInterval);
@@ -106,7 +113,7 @@ export default function ProfilePage() {
       const handleVisibilityChange = () => {
         if (!document.hidden && visitStartTime) {
           const timeSpent = Date.now() - visitStartTime;
-          if (timeSpent >= 5000 && !isVerified) {
+          if (timeSpent >= 10000 && !isVerified) {
             isVerified = true;
             
             // Add to unlocked images after verification
@@ -127,13 +134,20 @@ export default function ProfilePage() {
             // Show success toast
             toast({
               title: "Content unlocked!",
-              description: "Verification completed successfully.",
+              description: "10-second verification completed successfully.",
               duration: 3000,
             });
             
             // Cleanup
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             clearInterval(checkInterval);
+          } else if (visitStartTime && timeSpent < 10000) {
+            // User returned too early
+            toast({
+              title: "Not enough time spent",
+              description: `You only spent ${Math.round(timeSpent/1000)} seconds. Need 10 seconds minimum.`,
+              duration: 5000,
+            });
           }
         } else if (document.hidden && !visitStartTime) {
           // User left our page (presumably to visit verification link)
@@ -143,7 +157,7 @@ export default function ProfilePage() {
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
       
-      // Fallback cleanup after 2 minutes
+      // Fallback cleanup after 3 minutes
       setTimeout(() => {
         if (!isVerified) {
           setVerifyingImages(prev => {
@@ -154,7 +168,10 @@ export default function ProfilePage() {
         }
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         clearInterval(checkInterval);
-      }, 120000);
+        if (unlockWindow && !unlockWindow.closed) {
+          unlockWindow.close();
+        }
+      }, 180000);
     }
   };
 

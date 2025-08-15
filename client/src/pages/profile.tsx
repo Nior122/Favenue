@@ -60,14 +60,14 @@ export default function ProfilePage() {
       // Image is still being verified, show warning
       toast({
         title: "Still verifying",
-        description: "Click the link and spend 10 seconds on the verification page. If not, image won't open.",
+        description: "Click the link and spend 5 seconds on the verification page. If not, image won't open.",
         duration: 8000,
       });
     } else if (failedVerification.has(post.id)) {
       // Image verification failed, show failure message
       toast({
         title: "Verification failed",
-        description: "You didn't spend enough time on the verification page. Try unlocking again.",
+        description: "You didn't spend enough time (5 seconds) on the verification page. Try unlocking again.",
         duration: 8000,
       });
       // Allow user to try again
@@ -95,9 +95,9 @@ export default function ProfilePage() {
       
       // Show toast notification
       toast({
-        title: "Click the link and stay for 10 seconds",
-        description: "If you don't spend at least 10 seconds on the verification page, the image won't unlock.",
-        duration: 10000,
+        title: "Click the link and stay for 5 seconds",
+        description: "If you don't spend at least 5 seconds on the verification page, the image won't unlock.",
+        duration: 8000,
       });
 
       // Check if user actually visited the unlock page
@@ -120,7 +120,7 @@ export default function ProfilePage() {
             
             toast({
               title: "Verification failed - Window closed early",
-              description: "You must click the link and spend 10 seconds on the verification page. Image locked.",
+              description: "You must click the link and spend 5 seconds on the verification page. Image locked.",
               duration: 8000,
             });
           }
@@ -133,7 +133,7 @@ export default function ProfilePage() {
       const handleVisibilityChange = () => {
         if (!document.hidden && visitStartTime) {
           const timeSpent = Date.now() - visitStartTime;
-          if (timeSpent >= 10000 && !isVerified) {
+          if (timeSpent >= 5000 && !isVerified) {
             isVerified = true;
             
             // Add to unlocked images after verification
@@ -154,14 +154,14 @@ export default function ProfilePage() {
             // Show success toast
             toast({
               title: "Content unlocked!",
-              description: "10-second verification completed successfully.",
+              description: "5-second verification completed successfully.",
               duration: 3000,
             });
             
             // Cleanup
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             clearInterval(checkInterval);
-          } else if (visitStartTime && timeSpent < 10000) {
+          } else if (visitStartTime && timeSpent < 5000) {
             // User returned too early - mark as failed verification
             setVerifyingImages(prev => {
               const newSet = new Set(Array.from(prev));
@@ -172,7 +172,7 @@ export default function ProfilePage() {
             
             toast({
               title: "Verification failed - Not enough time",
-              description: `You only spent ${Math.round(timeSpent/1000)} seconds. Need 10 seconds minimum. Image locked.`,
+              description: `You only spent ${Math.round(timeSpent/1000)} seconds. Need 5 seconds minimum. Image locked.`,
               duration: 8000,
             });
             

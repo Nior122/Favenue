@@ -48,12 +48,14 @@ async function getProfiles() {
         // Load posts for this profile
         const posts = await getProfilePosts(profileId);
         const images = posts.map((post, index) => ({
-          id: `${profileId}-${index + 1}`,
+          id: post.id || `${profileId}-${index + 1}`,
           profileId: profileId,
           imageUrl: post.imageUrl,
+          title: post.title || '',
+          description: post.description || '',
           isMainImage: index === 0,
           order: (index + 1).toString(),
-          createdAt: new Date().toISOString()
+          createdAt: post.createdAt || new Date().toISOString()
         }));
         
         profiles.push({

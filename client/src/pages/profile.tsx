@@ -235,7 +235,7 @@ export default function ProfilePage() {
     if (!profile || !profile.images || profile.images.length === 0) return [];
     
     // Convert profile images to posts format using actual post data
-    return profile.images.map((image, index) => ({
+    const posts = profile.images.map((image, index) => ({
       id: image.id,
       imageUrl: image.imageUrl,
       title: image.title || '',
@@ -243,6 +243,9 @@ export default function ProfilePage() {
       date: image.createdAt ? new Date(image.createdAt).toLocaleDateString('en-CA') : '2025/08/12',
       attachments: 1
     }));
+    
+    console.log('📝 Generated posts with captions:', posts.map(p => ({ id: p.id, title: p.title, description: p.description })));
+    return posts;
   };
 
   const posts = profile ? generatePosts(profile) : [];
@@ -533,7 +536,7 @@ export default function ProfilePage() {
                     {/* Post Caption */}
                     <div className="p-2 sm:p-3">
                       <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 leading-tight">
-                        {post.description}
+                        {post.description || post.title || `Post ${currentPosts.indexOf(post) + 1}`}
                       </p>
                     </div>
                   </div>

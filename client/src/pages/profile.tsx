@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useRoute } from "wouter";
-import { Heart, Search, Eye, X } from "lucide-react";
+import { useRoute, useLocation } from "wouter";
+import { Heart, Search, Eye, X, ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +20,7 @@ interface Post {
 
 export default function ProfilePage() {
   const [, params] = useRoute("/profile/:id");
+  const [, setLocation] = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFavorited, setIsFavorited] = useState(false);
@@ -300,6 +301,28 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Navigation Buttons */}
+      <div className="fixed top-4 left-4 z-50 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="bg-black/50 border-white/20 text-white hover:bg-white/20"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setLocation("/")}
+          className="bg-black/50 border-white/20 text-white hover:bg-white/20"
+        >
+          <Home className="w-4 h-4 mr-1" />
+          Home
+        </Button>
+      </div>
+
       {/* Profile Header - Exactly like OnlyFans */}
       <div className="relative h-48 sm:h-64 overflow-hidden">
         {/* Cover Image with Dark Overlay */}

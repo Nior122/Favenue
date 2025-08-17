@@ -486,8 +486,8 @@ export default function ProfilePage() {
                 {currentPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="group cursor-pointer bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition-all duration-200"
-                    onClick={() => setSelectedPost(post)}
+                    className={`group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-600 transition-all duration-200 ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? 'cursor-pointer' : 'cursor-default'}`}
+                    onClick={(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? () => setSelectedPost(post) : undefined}
                     data-testid={`card-post-${post.id}`}
                   >
                     {/* Post Image */}
@@ -496,7 +496,7 @@ export default function ProfilePage() {
                         <img
                           src={post.imageUrl}
                           alt={post.title}
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full object-cover ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? '' : 'pointer-events-none'}`}
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-700 flex items-center justify-center">

@@ -238,8 +238,8 @@ export default function ProfilePage() {
     return profile.images.map((image, index) => ({
       id: image.id,
       imageUrl: image.imageUrl,
-      title: (image as any).title || `Post ${index + 1}`,
-      description: (image as any).description || `Post ${index + 1}`,
+      title: image.title || `Post ${index + 1}`,
+      description: image.description || `Post ${index + 1}`,
       date: image.createdAt ? new Date(image.createdAt).toLocaleDateString('en-CA') : '2025/08/12',
       attachments: 1
     }));

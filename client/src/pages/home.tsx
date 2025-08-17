@@ -13,7 +13,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
-  const [nextShuffleIn, setNextShuffleIn] = useState(60);
+  const [nextShuffleIn, setNextShuffleIn] = useState(30);
   const itemsPerPage = 50;
 
   const { data: allProfiles = [], isLoading, error } = useQuery<ProfileWithImages[]>({
@@ -62,35 +62,30 @@ export default function Home() {
     }
   }, [allProfiles]);
 
-  // Auto-shuffle every 60 seconds with countdown
+  // Auto-shuffle every 30 seconds with synchronized countdown
   useEffect(() => {
-    let countdownId: NodeJS.Timeout;
-    let shuffleId: NodeJS.Timeout;
+    let intervalId: NodeJS.Timeout;
 
     if (allProfiles.length > 0) {
-      // Reset countdown to 60
-      setNextShuffleIn(60);
+      // Reset countdown to 30
+      setNextShuffleIn(30);
       
-      // Countdown timer (updates every second)
-      countdownId = setInterval(() => {
+      // Combined timer that counts down and triggers shuffle
+      intervalId = setInterval(() => {
         setNextShuffleIn(prev => {
           if (prev <= 1) {
-            return 60; // Reset to 60 after shuffle
+            // Trigger shuffle when countdown reaches 0
+            setShuffleTrigger(Date.now());
+            console.log('⏰ Auto-shuffle triggered (30 seconds)');
+            return 30; // Reset to 30 for next cycle
           }
           return prev - 1;
         });
       }, 1000);
-
-      // Shuffle timer (triggers every 60 seconds)
-      shuffleId = setInterval(() => {
-        setShuffleTrigger(Date.now());
-        console.log('⏰ Auto-shuffle triggered (60 seconds)');
-      }, 60000);
     }
 
     return () => {
-      if (countdownId) clearInterval(countdownId);
-      if (shuffleId) clearInterval(shuffleId);
+      if (intervalId) clearInterval(intervalId);
     };
   }, [allProfiles]);
 
@@ -115,7 +110,7 @@ export default function Home() {
   const handleShuffle = () => {
     setShuffleTrigger(Date.now());
     setCurrentPage(1); // Reset to first page after shuffle
-    setNextShuffleIn(60); // Reset countdown timer
+    setNextShuffleIn(30); // Reset countdown timer to 30 seconds
     console.log('🔀 Manual shuffle triggered');
   };
 

@@ -245,6 +245,7 @@ export default function ProfilePage() {
     }));
     
     console.log('📝 Generated posts with captions:', posts.map(p => ({ id: p.id, title: p.title, description: p.description })));
+    console.log('📝 First post details:', posts[0]);
     return posts;
   };
 
@@ -535,9 +536,10 @@ export default function ProfilePage() {
                     
                     {/* Post Caption */}
                     <div className="p-2 sm:p-3">
-                      <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 leading-tight">
-                        {post.description || post.title || `Post ${currentPosts.indexOf(post) + 1}`}
-                      </p>
+                      <div className="text-xs sm:text-sm text-gray-300 leading-tight">
+                        <p className="font-semibold text-white mb-1">{post.title}</p>
+                        <p className="line-clamp-2">{post.description}</p>
+                      </div>
                     </div>
                   </div>
                 ))}

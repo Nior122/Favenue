@@ -13,6 +13,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
+  const [nextShuffleIn, setNextShuffleIn] = useState(60);
   const itemsPerPage = 50;
 
   const { data: allProfiles = [], isLoading, error } = useQuery<ProfileWithImages[]>({
@@ -61,6 +62,38 @@ export default function Home() {
     }
   }, [allProfiles]);
 
+  // Auto-shuffle every 60 seconds with countdown
+  useEffect(() => {
+    let countdownId: NodeJS.Timeout;
+    let shuffleId: NodeJS.Timeout;
+
+    if (allProfiles.length > 0) {
+      // Reset countdown to 60
+      setNextShuffleIn(60);
+      
+      // Countdown timer (updates every second)
+      countdownId = setInterval(() => {
+        setNextShuffleIn(prev => {
+          if (prev <= 1) {
+            return 60; // Reset to 60 after shuffle
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Shuffle timer (triggers every 60 seconds)
+      shuffleId = setInterval(() => {
+        setShuffleTrigger(Date.now());
+        console.log('⏰ Auto-shuffle triggered (60 seconds)');
+      }, 60000);
+    }
+
+    return () => {
+      if (countdownId) clearInterval(countdownId);
+      if (shuffleId) clearInterval(shuffleId);
+    };
+  }, [allProfiles]);
+
   // Filter and paginate profiles
   const filteredProfiles = shuffledProfiles.filter(profile => 
     profile.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -82,6 +115,7 @@ export default function Home() {
   const handleShuffle = () => {
     setShuffleTrigger(Date.now());
     setCurrentPage(1); // Reset to first page after shuffle
+    setNextShuffleIn(60); // Reset countdown timer
     console.log('🔀 Manual shuffle triggered');
   };
 
@@ -133,20 +167,25 @@ export default function Home() {
         </form>
       </div>
 
-      {/* Results Count and Shuffle Button */}
+      {/* Results Count, Auto-Shuffle Info, and Shuffle Button */}
       <div className="flex justify-between items-center py-4 px-4 max-w-4xl mx-auto">
         <div className="text-gray-300 text-sm">
           Showing {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredProfiles.length)} of {filteredProfiles.length}
         </div>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleShuffle}
-          className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
-          data-testid="button-shuffle"
-        >
-          🔀 Shuffle
-        </Button>
+        <div className="flex items-center space-x-3">
+          <div className="text-gray-400 text-xs">
+            Auto-shuffle in {nextShuffleIn}s
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleShuffle}
+            className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+            data-testid="button-shuffle"
+          >
+            🔀 Shuffle Now
+          </Button>
+        </div>
       </div>
 
       {/* Pagination Top */}

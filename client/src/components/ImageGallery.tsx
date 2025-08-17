@@ -46,7 +46,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
           >
             <img
               src={image.imageUrl}
-              alt={`Portfolio Item ${index + 1}`}
+              alt={(image as any).description || (image as any).title || `Portfolio Item ${index + 1}`}
               className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -111,7 +111,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
           <img
             src={images[currentImageIndex]?.imageUrl}
-            alt={`Portfolio Item ${currentImageIndex + 1}`}
+            alt={(images[currentImageIndex] as any)?.description || (images[currentImageIndex] as any)?.title || `Portfolio Item ${currentImageIndex + 1}`}
             className="max-w-full max-h-full object-contain"
             onClick={(e) => e.stopPropagation()}
             data-testid="lightbox-image"

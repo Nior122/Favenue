@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Search, Heart, ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,6 +12,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [shuffleTrigger, setShuffleTrigger] = useState(0);
   const itemsPerPage = 50;
 
   const { data: allProfiles = [], isLoading, error } = useQuery<ProfileWithImages[]>({
@@ -35,8 +36,33 @@ export default function Home() {
 
   console.log('🏠 Home component state:', { isLoading, allProfiles: allProfiles.length, error });
 
+  // Shuffle utility function
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Shuffle profiles on every page load/refresh and when data changes
+  const shuffledProfiles = useMemo(() => {
+    if (allProfiles.length === 0) return [];
+    const shuffled = shuffleArray(allProfiles);
+    console.log('🔀 Profiles shuffled! New order:', shuffled.map(p => p.name));
+    return shuffled;
+  }, [allProfiles, shuffleTrigger]);
+
+  // Shuffle profiles every time the component mounts or data loads
+  useEffect(() => {
+    if (allProfiles.length > 0) {
+      setShuffleTrigger(Date.now());
+    }
+  }, [allProfiles]);
+
   // Filter and paginate profiles
-  const filteredProfiles = allProfiles.filter(profile => 
+  const filteredProfiles = shuffledProfiles.filter(profile => 
     profile.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -51,6 +77,12 @@ export default function Home() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleShuffle = () => {
+    setShuffleTrigger(Date.now());
+    setCurrentPage(1); // Reset to first page after shuffle
+    console.log('🔀 Manual shuffle triggered');
   };
 
   // Generate page numbers
@@ -101,9 +133,20 @@ export default function Home() {
         </form>
       </div>
 
-      {/* Results Count and Pagination Info */}
-      <div className="text-center py-4 text-gray-300 text-sm">
-        Showing {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredProfiles.length)} of {filteredProfiles.length}
+      {/* Results Count and Shuffle Button */}
+      <div className="flex justify-between items-center py-4 px-4 max-w-4xl mx-auto">
+        <div className="text-gray-300 text-sm">
+          Showing {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredProfiles.length)} of {filteredProfiles.length}
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleShuffle}
+          className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+          data-testid="button-shuffle"
+        >
+          🔀 Shuffle
+        </Button>
       </div>
 
       {/* Pagination Top */}

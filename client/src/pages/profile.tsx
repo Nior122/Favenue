@@ -229,17 +229,17 @@ export default function ProfilePage() {
     enabled: !!profileId,
   });
 
-  // Generate mock posts for the profile - exactly like the screenshot
+  // Generate posts from profile images with actual post data
   const generatePosts = (profile: ProfileWithImages): Post[] => {
     // Return only actual profile images, not generated posts
     if (!profile || !profile.images || profile.images.length === 0) return [];
     
-    // Convert profile images to posts format
+    // Convert profile images to posts format using actual post data
     return profile.images.map((image, index) => ({
       id: image.id,
       imageUrl: image.imageUrl,
-      title: `Gallery Image ${index + 1}`,
-      description: `Gallery Image ${index + 1}`,
+      title: (image as any).title || `Gallery Image ${index + 1}`,
+      description: (image as any).description || `Gallery Image ${index + 1}`,
       date: image.createdAt ? new Date(image.createdAt).toLocaleDateString('en-CA') : '2025/08/12',
       attachments: 1
     }));

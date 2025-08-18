@@ -23,11 +23,17 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Profile operations
-  getProfiles(filters?: { category?: string; location?: string; search?: string; limit?: number; offset?: number }): Promise<ProfileWithImages[]>;
+  getProfiles(filters?: { category?: string; location?: string; search?: string; limit?: number; offset?: number; userId?: string }): Promise<ProfileWithImages[]>;
+  getAllProfiles(): Promise<ProfileWithImages[]>;
   getProfile(id: string, userId?: string): Promise<ProfileWithImages | undefined>;
   createProfile(profile: InsertProfile): Promise<Profile>;
   updateProfile(id: string, profile: Partial<InsertProfile>): Promise<Profile | undefined>;
   deleteProfile(id: string): Promise<boolean>;
+
+  // Profile management operations  
+  addProfile(profile: any): Promise<Profile>;
+  addPost(profileId: string, post: any): Promise<any>;
+  deletePost(profileId: string, postId: string): Promise<boolean>;
 
   // Profile image operations
   addProfileImage(image: InsertProfileImage): Promise<ProfileImage>;
@@ -46,6 +52,44 @@ export class MemStorage implements IStorage {
   private profiles = new Map<string, Profile>();
   private profileImages = new Map<string, ProfileImage>();
   private userFavorites = new Map<string, UserFavorite>();
+
+  async getAllProfiles(): Promise<ProfileWithImages[]> {
+    const profiles = Array.from(this.profiles.values())
+      .filter(p => p.isActive)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+
+    const profilesWithImages: ProfileWithImages[] = [];
+    for (const profile of profiles) {
+      const images = await this.getProfileImages(profile.id);
+      profilesWithImages.push({
+        ...profile,
+        images,
+      });
+    }
+
+    return profilesWithImages;
+  }
+
+  async addProfile(profileData: any): Promise<Profile> {
+    return this.createProfile(profileData);
+  }
+
+  async addPost(profileId: string, postData: any): Promise<any> {
+    const image = await this.addProfileImage({
+      profileId,
+      imageUrl: postData.imageUrl || '',
+      title: postData.title || '',
+      description: postData.description || '',
+      tags: postData.tags || null,
+      order: '0',
+      isMainImage: false
+    });
+    return { id: image.id, profileId, ...postData };
+  }
+
+  async deletePost(profileId: string, postId: string): Promise<boolean> {
+    return this.deleteProfileImage(postId);
+  }
 
   // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
@@ -191,7 +235,11 @@ export class MemStorage implements IStorage {
   async addProfileImage(imageData: InsertProfileImage): Promise<ProfileImage> {
     const image: ProfileImage = {
       id: nanoid(),
-      ...imageData,
+      profileId: imageData.profileId,
+      imageUrl: imageData.imageUrl,
+      title: imageData.title || null,
+      description: imageData.description || null,
+      tags: imageData.tags || null,
       order: imageData.order || '0',
       isMainImage: imageData.isMainImage || false,
       createdAt: new Date(),
@@ -279,6 +327,31 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getAllProfiles(): Promise<ProfileWithImages[]> {
+    return this.getProfiles();
+  }
+
+  async addProfile(profileData: any): Promise<Profile> {
+    return this.createProfile(profileData);
+  }
+
+  async addPost(profileId: string, postData: any): Promise<any> {
+    const image = await this.addProfileImage({
+      profileId,
+      imageUrl: postData.imageUrl || '',
+      title: postData.title || '',
+      description: postData.description || '',
+      tags: postData.tags || null,
+      order: '0',
+      isMainImage: false
+    });
+    return { id: image.id, profileId, ...postData };
+  }
+
+  async deletePost(profileId: string, postId: string): Promise<boolean> {
+    return this.deleteProfileImage(postId);
+  }
+
   // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -474,4 +547,6 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Using file-based storage instead of database for Replit compatibility
+import { fileStorage } from "./fileStorage";
+export const storage = fileStorage;

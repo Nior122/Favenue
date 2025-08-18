@@ -83,18 +83,18 @@ export const fileStorage: IStorage = {
     
     // Apply filters
     if (filters?.category) {
-      filteredProfiles = filteredProfiles.filter(p => p.category === filters.category);
+      filteredProfiles = filteredProfiles.filter((p: any) => p.category === filters.category);
     }
     
     if (filters?.location) {
-      filteredProfiles = filteredProfiles.filter(p => 
+      filteredProfiles = filteredProfiles.filter((p: any) => 
         p.location?.toLowerCase().includes(filters.location!.toLowerCase())
       );
     }
     
     if (filters?.search) {
       const searchTerm = filters.search.toLowerCase();
-      filteredProfiles = filteredProfiles.filter(p => 
+      filteredProfiles = filteredProfiles.filter((p: any) => 
         p.name.toLowerCase().includes(searchTerm) ||
         p.title.toLowerCase().includes(searchTerm) ||
         (p.description && p.description.toLowerCase().includes(searchTerm))
@@ -206,7 +206,7 @@ export const fileStorage: IStorage = {
   async getProfile(id: string, userId?: string): Promise<ProfileWithImages | undefined> {
     try {
       const allProfiles = await this.getAllProfiles();
-      const profile = allProfiles.find(p => p.id === id);
+      const profile = allProfiles.find((p: any) => p.id === id);
       if (!profile) return undefined;
       
       // Add favorite status if userId provided
@@ -218,6 +218,49 @@ export const fileStorage: IStorage = {
     } catch (error) {
       console.error(`❌ Error loading profile ${id}:`, error);
       return undefined;
+    }
+  },
+
+  // Profile management methods
+  async addProfile(profileData: any): Promise<Profile> {
+    return this.createProfile(profileData);
+  },
+
+  async addPost(profileId: string, postData: any): Promise<any> {
+    try {
+      const postId = nanoid();
+      const postDir = path.join(process.cwd(), 'data', profileId);
+      const postFile = path.join(postDir, `post-${postId}.json`);
+      
+      // Ensure profile directory exists
+      await fs.mkdir(postDir, { recursive: true });
+      
+      const post = {
+        id: postId,
+        profileId,
+        title: postData.title || '',
+        description: postData.description || '',
+        imageUrl: postData.imageUrl || '',
+        tags: postData.tags || [],
+        createdAt: new Date().toISOString()
+      };
+      
+      await fs.writeFile(postFile, JSON.stringify(post, null, 2));
+      return post;
+    } catch (error) {
+      console.error('Error adding post:', error);
+      throw error;
+    }
+  },
+
+  async deletePost(profileId: string, postId: string): Promise<boolean> {
+    try {
+      const postFile = path.join(process.cwd(), 'data', profileId, `post-${postId}.json`);
+      await fs.unlink(postFile);
+      return true;
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      return false;
     }
   },
 

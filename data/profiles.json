@@ -33,5 +33,12 @@
     "title": "Premium Content Creator",
     "category": "Lifestyle",
     "location": "United States"
+  },
+  {
+    "id": "emma_ruby",
+    "name": "emma_ruby",
+    "title": "Ruby Content Creator",
+    "category": "Premium",
+    "location": "United States"
   }
 ]

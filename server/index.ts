@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from 'path';
 import { registerRoutes } from "./staticRoutes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -38,7 +39,7 @@ app.use((req, res, next) => {
 
 (async () => {
   console.log('📁 Using file-based storage (no database needed)');
-  
+
   const server = registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -52,22 +53,30 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  if (process.env.NODE_ENV === 'production') {
+    // Serve static files in production
+    app.use(express.static(path.join(__dirname, '../dist/public')));
+
+    // Handle React routing in production
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(__dirname, '../dist/public/index.html'));
+      }
+    });
   } else {
-    serveStatic(app);
+    await setupVite(app, server);
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
+  // Other ports are firewalled. Default to 3000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const PORT = parseInt(process.env.PORT || '3000', 10);
   server.listen({
-    port,
+    port: PORT,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`serving on port ${PORT}`);
   });
 })();

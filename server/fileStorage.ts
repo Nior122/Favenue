@@ -4,20 +4,27 @@ import { ProfileWithImages, User, UpsertUser, Profile, InsertProfile, ProfileIma
 import { nanoid } from 'nanoid';
 import { IStorage } from './storage';
 
+const DATA_DIR = path.join(process.cwd(), 'data');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
 export const fileStorage: IStorage = {
   // User operations (for authentication)
   async getUser(id: string): Promise<User | undefined> {
     try {
       const usersPath = path.join(process.cwd(), 'data', 'users.json');
       let users: User[] = [];
-      
+
       try {
         const usersData = await fs.readFile(usersPath, 'utf-8');
         users = JSON.parse(usersData);
       } catch {
         // File doesn't exist yet
       }
-      
+
       return users.find(u => u.id === id);
     } catch (error) {
       console.error('Error getting user:', error);
@@ -29,17 +36,17 @@ export const fileStorage: IStorage = {
     try {
       const usersPath = path.join(process.cwd(), 'data', 'users.json');
       let users: User[] = [];
-      
+
       try {
         const usersData = await fs.readFile(usersPath, 'utf-8');
         users = JSON.parse(usersData);
       } catch {
         // File doesn't exist yet, will create
       }
-      
+
       const now = new Date();
       const existingIndex = users.findIndex(u => u.id === userData.id);
-      
+
       const user: User = {
         id: userData.id || nanoid(),
         email: userData.email || '',
@@ -50,17 +57,17 @@ export const fileStorage: IStorage = {
         createdAt: existingIndex >= 0 ? users[existingIndex].createdAt : now,
         updatedAt: now,
       };
-      
+
       if (existingIndex >= 0) {
         users[existingIndex] = user;
       } else {
         users.push(user);
       }
-      
+
       // Ensure data directory exists
       await fs.mkdir(path.dirname(usersPath), { recursive: true });
       await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
-      
+
       return user;
     } catch (error) {
       console.error('Error upserting user:', error);
@@ -78,20 +85,20 @@ export const fileStorage: IStorage = {
   }): Promise<ProfileWithImages[]> {
     // Use the existing getAllProfiles logic with filtering
     const allProfiles = await this.getAllProfiles();
-    
+
     let filteredProfiles = allProfiles;
-    
+
     // Apply filters
     if (filters?.category) {
       filteredProfiles = filteredProfiles.filter((p: any) => p.category === filters.category);
     }
-    
+
     if (filters?.location) {
       filteredProfiles = filteredProfiles.filter((p: any) => 
         p.location?.toLowerCase().includes(filters.location!.toLowerCase())
       );
     }
-    
+
     if (filters?.search) {
       const searchTerm = filters.search.toLowerCase();
       filteredProfiles = filteredProfiles.filter((p: any) => 
@@ -100,7 +107,7 @@ export const fileStorage: IStorage = {
         (p.description && p.description.toLowerCase().includes(searchTerm))
       );
     }
-    
+
     // Apply pagination
     const offset = filters?.offset || 0;
     if (filters?.limit) {
@@ -108,25 +115,25 @@ export const fileStorage: IStorage = {
     } else if (offset > 0) {
       filteredProfiles = filteredProfiles.slice(offset);
     }
-    
+
     return filteredProfiles;
   },
 
   async getAllProfiles(): Promise<ProfileWithImages[]> {
     try {
       console.log('📂 Loading profiles from data folder...');
-      
+
       // Get all profile folders
       const dataDir = path.join(process.cwd(), 'data');
       const entries = await fs.readdir(dataDir, { withFileTypes: true });
       const profileDirs = entries
         .filter(entry => entry.isDirectory())
         .map(entry => entry.name);
-      
+
       const result = await Promise.all(profileDirs.map(async (profileId) => {
         try {
           const profileDir = path.join(dataDir, profileId);
-          
+
           // Load profile info
           const profileFile = path.join(profileDir, 'profile.json');
           let profileData;
@@ -151,11 +158,11 @@ export const fileStorage: IStorage = {
               isActive: true
             };
           }
-          
+
           // Load post files
           const files = await fs.readdir(profileDir).catch(() => []);
           const postFiles = files.filter(file => file.endsWith('.json') && file !== 'profile.json');
-          
+
           const images = await Promise.all(
             postFiles.map(async (file, index) => {
               try {
@@ -178,7 +185,7 @@ export const fileStorage: IStorage = {
               }
             })
           );
-          
+
           return {
             id: profileId,
             ...profileData,
@@ -192,11 +199,11 @@ export const fileStorage: IStorage = {
           return null;
         }
       }));
-      
+
       const profiles = result.filter(Boolean);
       console.log(`✅ Loaded ${profiles.length} profiles from data folders`);
       return profiles;
-      
+
     } catch (error) {
       console.error('❌ Error loading profiles:', error);
       return [];
@@ -208,12 +215,12 @@ export const fileStorage: IStorage = {
       const allProfiles = await this.getAllProfiles();
       const profile = allProfiles.find((p: any) => p.id === id);
       if (!profile) return undefined;
-      
+
       // Add favorite status if userId provided
       if (userId) {
         profile.isFavorited = await this.isFavorited(userId, id);
       }
-      
+
       return profile;
     } catch (error) {
       console.error(`❌ Error loading profile ${id}:`, error);
@@ -231,10 +238,10 @@ export const fileStorage: IStorage = {
       const postId = nanoid();
       const postDir = path.join(process.cwd(), 'data', profileId);
       const postFile = path.join(postDir, `post-${postId}.json`);
-      
+
       // Ensure profile directory exists
       await fs.mkdir(postDir, { recursive: true });
-      
+
       const post = {
         id: postId,
         profileId,
@@ -244,7 +251,7 @@ export const fileStorage: IStorage = {
         tags: postData.tags || [],
         createdAt: new Date().toISOString()
       };
-      
+
       await fs.writeFile(postFile, JSON.stringify(post, null, 2));
       return post;
     } catch (error) {
@@ -269,7 +276,7 @@ export const fileStorage: IStorage = {
     try {
       const profileId = nanoid();
       const now = new Date();
-      
+
       const profile: Profile = {
         id: profileId,
         name: profileData.name,
@@ -290,11 +297,11 @@ export const fileStorage: IStorage = {
         createdAt: now,
         updatedAt: now,
       };
-      
+
       // Create profile directory and file
       const profileDir = path.join(process.cwd(), 'data', profileId);
       await fs.mkdir(profileDir, { recursive: true });
-      
+
       const profileFile = path.join(profileDir, 'profile.json');
       await fs.writeFile(profileFile, JSON.stringify({
         name: profile.name,
@@ -312,7 +319,7 @@ export const fileStorage: IStorage = {
         tags: profile.tags,
         isActive: profile.isActive
       }, null, 2));
-      
+
       return profile;
     } catch (error) {
       console.error('Error creating profile:', error);
@@ -324,15 +331,15 @@ export const fileStorage: IStorage = {
     try {
       const existing = await this.getProfile(id);
       if (!existing) return undefined;
-      
+
       const profileDir = path.join(process.cwd(), 'data', id);
       const profileFile = path.join(profileDir, 'profile.json');
-      
+
       const currentData = JSON.parse(await fs.readFile(profileFile, 'utf-8'));
       const updatedData = { ...currentData, ...profileData };
-      
+
       await fs.writeFile(profileFile, JSON.stringify(updatedData, null, 2));
-      
+
       return {
         ...existing,
         ...profileData,
@@ -348,10 +355,10 @@ export const fileStorage: IStorage = {
     try {
       const profileDir = path.join(process.cwd(), 'data', id);
       const profileFile = path.join(profileDir, 'profile.json');
-      
+
       const currentData = JSON.parse(await fs.readFile(profileFile, 'utf-8'));
       currentData.isActive = false;
-      
+
       await fs.writeFile(profileFile, JSON.stringify(currentData, null, 2));
       return true;
     } catch (error) {
@@ -395,16 +402,16 @@ export const fileStorage: IStorage = {
     try {
       const favoritesPath = path.join(process.cwd(), 'data', 'favorites.json');
       let favorites: { userId: string; profileId: string; createdAt: string }[] = [];
-      
+
       try {
         const favoritesData = await fs.readFile(favoritesPath, 'utf-8');
         favorites = JSON.parse(favoritesData);
       } catch {
         // File doesn't exist yet
       }
-      
+
       const existingIndex = favorites.findIndex(f => f.userId === userId && f.profileId === profileId);
-      
+
       if (existingIndex >= 0) {
         favorites.splice(existingIndex, 1);
         await fs.writeFile(favoritesPath, JSON.stringify(favorites, null, 2));
@@ -429,24 +436,24 @@ export const fileStorage: IStorage = {
     try {
       const favoritesPath = path.join(process.cwd(), 'data', 'favorites.json');
       let favorites: { userId: string; profileId: string; createdAt: string }[] = [];
-      
+
       try {
         const favoritesData = await fs.readFile(favoritesPath, 'utf-8');
         favorites = JSON.parse(favoritesData);
       } catch {
         return [];
       }
-      
+
       const userFavorites = favorites.filter(f => f.userId === userId);
       const profiles: ProfileWithImages[] = [];
-      
+
       for (const fav of userFavorites) {
         const profile = await this.getProfile(fav.profileId, userId);
         if (profile) {
           profiles.push({ ...profile, isFavorited: true });
         }
       }
-      
+
       return profiles;
     } catch (error) {
       console.error('Error getting user favorites:', error);

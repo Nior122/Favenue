@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import { ProfileWithImages, User, UpsertUser, Profile, InsertProfile, ProfileImage, InsertProfileImage } from '@shared/schema';
 import { nanoid } from 'nanoid';
@@ -7,8 +8,8 @@ import { IStorage } from './storage';
 const DATA_DIR = path.join(process.cwd(), 'data');
 
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fsSync.existsSync(DATA_DIR)) {
+  fsSync.mkdirSync(DATA_DIR, { recursive: true });
 }
 
 export const fileStorage: IStorage = {

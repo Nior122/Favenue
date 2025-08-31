@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { fileStorage } from "./fileStorage";
+import { scrapeMediaUrls, createPostsFromMedia } from "./scraper";
 
 export function registerRoutes(app: Express): Server {
   // Profile routes - now using file storage
@@ -71,6 +72,43 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error deleting post:", error);
       res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // Media scraping route
+  app.post('/api/scrape-media', async (req, res) => {
+    try {
+      const { url, profileId } = req.body;
+      
+      if (!url || !profileId) {
+        return res.status(400).json({ message: "URL and profileId are required" });
+      }
+
+      console.log(`🚀 Starting media scraping for profile: ${profileId}`);
+      
+      // Clear existing posts for this profile first
+      await fileStorage.clearProfilePosts(profileId);
+      
+      // Scrape media URLs
+      const mediaItems = await scrapeMediaUrls(url);
+      
+      if (mediaItems.length === 0) {
+        return res.status(404).json({ message: "No media found on the specified URL" });
+      }
+
+      // Create posts from scraped media
+      await createPostsFromMedia(profileId, mediaItems);
+      
+      res.json({ 
+        message: `Successfully scraped and uploaded ${mediaItems.length} media items`,
+        count: mediaItems.length,
+        images: mediaItems.filter(m => m.type === 'image').length,
+        videos: mediaItems.filter(m => m.type === 'video').length
+      });
+
+    } catch (error) {
+      console.error("Error scraping media:", error);
+      res.status(500).json({ message: `Failed to scrape media: ${error}` });
     }
   });
 

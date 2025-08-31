@@ -272,6 +272,30 @@ export const fileStorage: IStorage = {
     }
   },
 
+  async clearProfilePosts(profileId: string): Promise<void> {
+    try {
+      const postDir = path.join(process.cwd(), 'data', profileId);
+      
+      // Read directory and delete all post files
+      try {
+        const files = await fs.readdir(postDir);
+        const postFiles = files.filter(file => file.startsWith('post-') && file.endsWith('.json'));
+        
+        console.log(`🗑️ Clearing ${postFiles.length} existing posts for profile: ${profileId}`);
+        
+        for (const file of postFiles) {
+          await fs.unlink(path.join(postDir, file));
+        }
+      } catch (error) {
+        // Directory might not exist, which is fine
+        console.log(`📁 Profile directory doesn't exist yet: ${profileId}`);
+      }
+    } catch (error) {
+      console.error('Error clearing profile posts:', error);
+      throw error;
+    }
+  },
+
   // Profile management operations (for admin)
   async createProfile(profileData: InsertProfile): Promise<Profile> {
     try {

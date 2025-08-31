@@ -34,6 +34,7 @@ export interface IStorage {
   addProfile(profile: any): Promise<Profile>;
   addPost(profileId: string, post: any): Promise<any>;
   deletePost(profileId: string, postId: string): Promise<boolean>;
+  clearProfilePosts(profileId: string): Promise<void>;
 
   // Profile image operations
   addProfileImage(image: InsertProfileImage): Promise<ProfileImage>;
@@ -89,6 +90,17 @@ export class MemStorage implements IStorage {
 
   async deletePost(profileId: string, postId: string): Promise<boolean> {
     return this.deleteProfileImage(postId);
+  }
+
+  async clearProfilePosts(profileId: string): Promise<void> {
+    // For MemStorage, clear all profile images for this profile
+    const imagesToDelete = Array.from(this.profileImages.values())
+      .filter(img => img.profileId === profileId)
+      .map(img => img.id);
+    
+    for (const imageId of imagesToDelete) {
+      this.profileImages.delete(imageId);
+    }
   }
 
   // User operations (mandatory for Replit Auth)
@@ -350,6 +362,11 @@ export class DatabaseStorage implements IStorage {
 
   async deletePost(profileId: string, postId: string): Promise<boolean> {
     return this.deleteProfileImage(postId);
+  }
+
+  async clearProfilePosts(profileId: string): Promise<void> {
+    // For DatabaseStorage, delete all profile images for this profile
+    await db.delete(profileImages).where(eq(profileImages.profileId, profileId));
   }
 
   // User operations (mandatory for Replit Auth)

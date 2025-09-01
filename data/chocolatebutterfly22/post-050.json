@@ -2,8 +2,14 @@
   "id": "post-050",
   "profileId": "chocolatebutterfly22",
   "title": "Flutter & Fly 🦋",
-  "description": "Pure indulgence in every frame 💖",
+  "description": "Hot and ready 🌡️",
   "imageUrl": "https://img.coomer.st/thumbnail/data/b8/80/b880f4b4da50411670eecec97896108157e2bc1748416bc72f05f4a794d367fb.jpg",
-  "tags": ["sweet", "chocolate", "butterfly", "premium", "exclusive"],
+  "tags": [
+    "sweet",
+    "chocolate",
+    "butterfly",
+    "premium",
+    "exclusive"
+  ],
   "createdAt": "2025-01-18T22:49:00.000Z"
 }

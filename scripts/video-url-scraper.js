@@ -3,7 +3,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
-class TargetedScraper {
+class VideoUrlScraper {
   constructor(baseUrl, profileId) {
     this.baseUrl = baseUrl.replace(/\?page=\d+/, ''); // Remove page parameter
     this.profileId = profileId;
@@ -80,15 +80,127 @@ class TargetedScraper {
     return caption;
   }
 
+  // Extract actual video URLs by finding the source links
+  async extractVideoUrls(postId, $thumb) {
+    const videoUrls = [];
+    
+    try {
+      // Get the post link
+      const postLink = $thumb.find('.thumb__link').attr('href');
+      if (!postLink) return videoUrls;
+      
+      const fullPostUrl = postLink.startsWith('http') ? postLink : `https://www.twpornstars.com${postLink}`;
+      console.log(`🎬 Fetching individual post: ${fullPostUrl}`);
+      
+      // Fetch the individual post page
+      const response = await axios.get(fullPostUrl, this.axiosConfig);
+      const post$ = cheerio.load(response.data);
+      
+      // Look for video elements and their sources
+      const foundUrls = new Set();
+      
+      // Method 1: Look for direct video elements
+      post$('video').each((i, el) => {
+        const $video = post$(el);
+        const src = $video.attr('src');
+        if (src && this.isVideoUrl(src)) {
+          foundUrls.add(src);
+        }
+        
+        // Check source elements inside video
+        $video.find('source').each((j, source) => {
+          const sourceSrc = post$(source).attr('src');
+          if (sourceSrc && this.isVideoUrl(sourceSrc)) {
+            foundUrls.add(sourceSrc);
+          }
+        });
+      });
+      
+      // Method 2: Look for Twitter video patterns in script tags
+      post$('script').each((i, script) => {
+        const scriptContent = post$(script).html() || '';
+        
+        // Look for Twitter video URLs in script content
+        const twitterVideoRegex = /https:\/\/video\.twimg\.com\/[^"'\s]+\.(mp4|webm|m3u8)/gi;
+        let match;
+        while ((match = twitterVideoRegex.exec(scriptContent)) !== null) {
+          foundUrls.add(match[0]);
+        }
+        
+        // Look for other video patterns
+        const videoUrlRegex = /https:\/\/[^"'\s]+\.(mp4|webm|m3u8|mov)[^"'\s]*/gi;
+        while ((match = videoUrlRegex.exec(scriptContent)) !== null) {
+          foundUrls.add(match[0]);
+        }
+      });
+      
+      // Method 3: Look for data attributes that might contain video URLs
+      post$('[data-src], [data-video], [data-video-src]').each((i, el) => {
+        const $el = post$(el);
+        const dataSrc = $el.attr('data-src') || $el.attr('data-video') || $el.attr('data-video-src');
+        if (dataSrc && this.isVideoUrl(dataSrc)) {
+          foundUrls.add(dataSrc);
+        }
+      });
+      
+      // Method 4: Look for Twitter's specific video container patterns
+      post$('.player-container, .video-container, .media-container').each((i, container) => {
+        const $container = post$(container);
+        const innerHTML = $container.html() || '';
+        
+        const videoUrlRegex = /https:\/\/[^"'\s]+\.(mp4|webm|m3u8)/gi;
+        let match;
+        while ((match = videoUrlRegex.exec(innerHTML)) !== null) {
+          foundUrls.add(match[0]);
+        }
+      });
+      
+      // Convert Set to Array and filter valid URLs
+      videoUrls.push(...Array.from(foundUrls).filter(url => this.isVideoUrl(url)));
+      
+      if (videoUrls.length > 0) {
+        console.log(`✅ Found ${videoUrls.length} video URLs for post ${postId}`);
+      } else {
+        console.log(`⚠️  No video URLs found for post ${postId}`);
+      }
+      
+      // Rate limiting for individual post requests
+      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
+      
+    } catch (error) {
+      console.error(`❌ Error fetching post ${postId}:`, error.message);
+    }
+    
+    return videoUrls;
+  }
+
+  // Check if URL is a valid video URL
+  isVideoUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    
+    // Check for video file extensions
+    const videoExtensions = /\.(mp4|webm|m3u8|mpd|mov|avi|ogg|ogv)(\?|$)/i;
+    if (videoExtensions.test(url)) return true;
+    
+    // Check for known video domains
+    const videoDomains = /video\.twimg\.com|player\.twimg\.com|vimeo\.com|youtube\.com/i;
+    if (videoDomains.test(url)) return true;
+    
+    return false;
+  }
+
   // Extract media from HTML using the specific structure found
-  extractMediaFromHtml($, pageUrl) {
+  async extractMediaFromHtml($, pageUrl) {
     const items = [];
     
     console.log('🔍 Extracting media from HTML using targeted selectors...');
     
     // Target the specific structure: .thumb elements with .thumb__img
-    $('.thumb').each((i, el) => {
-      const $thumb = $(el);
+    const thumbs = $('.thumb');
+    console.log(`📋 Found ${thumbs.length} thumb elements`);
+    
+    for (let i = 0; i < thumbs.length; i++) {
+      const $thumb = $(thumbs[i]);
       const $img = $thumb.find('.thumb__img');
       const $link = $thumb.find('.thumb__link');
       
@@ -96,11 +208,9 @@ class TargetedScraper {
         const src = $img.attr('src');
         const alt = $img.attr('alt') || $img.attr('title');
         const linkTitle = $link.attr('title');
+        const postId = $thumb.attr('data-post-id');
         
         if (src && src.includes('pbs.twimg.com')) {
-          // Clean up the URL - remove the :small suffix for higher quality
-          const cleanUrl = src.replace(':small', ':large').replace('https:///', 'https://');
-          
           // Use the best available caption
           let caption = linkTitle || alt || null;
           if (caption) {
@@ -110,16 +220,53 @@ class TargetedScraper {
           
           // Determine content type
           const isVideo = $thumb.attr('data-isvideo') === '1' || $thumb.find('.thumb__video_icon').length > 0;
-          const contentType = isVideo ? 'video' : 'image';
           
-          items.push({
-            url: cleanUrl,
-            type: contentType,
-            caption: caption
-          });
+          if (isVideo) {
+            console.log(`🎬 Processing video post ${postId}...`);
+            
+            // Try to extract actual video URLs
+            const videoUrls = await this.extractVideoUrls(postId, $thumb);
+            
+            if (videoUrls.length > 0) {
+              // Use the first (usually best quality) video URL found
+              const videoUrl = videoUrls[0];
+              items.push({
+                url: videoUrl,
+                type: 'video',
+                caption: caption,
+                postId: postId
+              });
+              console.log(`✅ Added video: ${videoUrl.substring(0, 80)}...`);
+            } else {
+              // Fallback: use the thumbnail but mark it as such
+              const cleanUrl = src.replace(':small', ':large').replace('https:///', 'https://');
+              items.push({
+                url: cleanUrl,
+                type: 'video',
+                caption: caption,
+                postId: postId,
+                note: 'thumbnail_fallback'
+              });
+              console.log(`⚠️  Using thumbnail as fallback for video ${postId}`);
+            }
+          } else {
+            // For images, clean up the URL
+            const cleanUrl = src.replace(':small', ':large').replace('https:///', 'https://');
+            items.push({
+              url: cleanUrl,
+              type: 'image',
+              caption: caption,
+              postId: postId
+            });
+          }
         }
       }
-    });
+      
+      // Progress indicator
+      if ((i + 1) % 10 === 0) {
+        console.log(`📈 Processed ${i + 1}/${thumbs.length} thumbs...`);
+      }
+    }
 
     // Deduplicate items
     const seen = new Map();
@@ -194,7 +341,7 @@ class TargetedScraper {
   // Main scraping function
   async scrape() {
     try {
-      console.log('🚀 Starting targeted scraper...');
+      console.log('🚀 Starting video URL scraper...');
       
       // Fetch first page
       const firstPageHtml = await this.fetchPage(1);
@@ -205,7 +352,7 @@ class TargetedScraper {
       const $ = cheerio.load(firstPageHtml);
       
       // Extract items from first page
-      const firstPageItems = this.extractMediaFromHtml($, `${this.baseUrl}?page=1`);
+      const firstPageItems = await this.extractMediaFromHtml($, `${this.baseUrl}?page=1`);
       this.allItems = [...firstPageItems];
       this.pagesVisited = 1;
       
@@ -228,14 +375,14 @@ class TargetedScraper {
           }
           
           const page$ = cheerio.load(pageHtml);
-          const pageItems = this.extractMediaFromHtml(page$, `${this.baseUrl}?page=${pageNum}`);
+          const pageItems = await this.extractMediaFromHtml(page$, `${this.baseUrl}?page=${pageNum}`);
           this.allItems = [...this.allItems, ...pageItems];
           this.pagesVisited++;
           
           console.log(`✅ Page ${pageNum}: Found ${pageItems.length} items`);
           
-          // Rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+          // Rate limiting between pages
+          await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
         }
       } else {
         console.log('📄 No pagination found or only one page detected');
@@ -297,6 +444,11 @@ class TargetedScraper {
         updatedAt: new Date().toISOString()
       };
       
+      // Add note if this was a thumbnail fallback
+      if (item.note) {
+        postData.note = item.note;
+      }
+      
       const postPath = path.join(profileDir, `post-${postNumber}.json`);
       
       try {
@@ -312,7 +464,8 @@ class TargetedScraper {
       }
       
       // Add to media URLs list
-      mediaUrls.push(`${item.url} – ${caption}`);
+      const urlEntry = `${item.url} – ${caption}${item.note ? ' [THUMBNAIL_FALLBACK]' : ''}`;
+      mediaUrls.push(urlEntry);
     }
     
     // Save media_urls.txt
@@ -335,14 +488,29 @@ class TargetedScraper {
 
   // Generate final report
   getReport() {
+    const videoCount = this.allItems.filter(item => item.type === 'video').length;
+    const imageCount = this.allItems.filter(item => item.type === 'image').length;
+    const actualVideoCount = this.allItems.filter(item => item.type === 'video' && !item.note).length;
+    const thumbnailFallbackCount = this.allItems.filter(item => item.note === 'thumbnail_fallback').length;
+    
     return {
       source_url: `${this.baseUrl}?page=1`,
       pages_visited: this.pagesVisited,
       items_scraped: this.itemsScraped,
       items_uploaded: this.itemsUploaded,
+      content_breakdown: {
+        images: imageCount,
+        videos: videoCount,
+        actual_videos: actualVideoCount,
+        thumbnail_fallbacks: thumbnailFallbackCount
+      },
       failed_uploads: this.failedUploads,
       file_saved: "media_urls.txt",
-      notes: this.failedUploads.length > 0 ? `${this.failedUploads.length} items failed to upload` : "All items processed successfully"
+      notes: this.failedUploads.length > 0 
+        ? `${this.failedUploads.length} items failed to upload` 
+        : thumbnailFallbackCount > 0 
+          ? `${thumbnailFallbackCount} videos fell back to thumbnails (video streams not extractable)`
+          : "All items processed successfully"
     };
   }
 }
@@ -353,11 +521,11 @@ async function main() {
   const profileId = process.argv[3];
   
   if (!startUrl || !profileId) {
-    console.error('Usage: node targeted-scraper.js <startUrl> <profileId>');
+    console.error('Usage: node video-url-scraper.js <startUrl> <profileId>');
     process.exit(1);
   }
   
-  const scraper = new TargetedScraper(startUrl, profileId);
+  const scraper = new VideoUrlScraper(startUrl, profileId);
   
   try {
     await scraper.scrape();

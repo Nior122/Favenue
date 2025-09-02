@@ -3,6 +3,12 @@
   "pages_visited": 5,
   "items_scraped": 146,
   "items_uploaded": 146,
+  "content_breakdown": {
+    "images": 3,
+    "videos": 143,
+    "actual_videos": 143,
+    "thumbnail_fallbacks": 0
+  },
   "failed_uploads": [],
   "file_saved": "media_urls.txt",
   "notes": "All items processed successfully"

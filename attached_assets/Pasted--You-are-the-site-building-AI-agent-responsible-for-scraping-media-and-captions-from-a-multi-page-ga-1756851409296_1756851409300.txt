@@ -1,0 +1,380 @@
+
+You are the site-building AI agent responsible for scraping media and captions from a multi-page gallery and uploading them to the profile you just created. Follow these steps exactly and do not change the profile structure.
+
+A. OVERVIEW / GOAL
+1. On the target gallery page, iterate through all numbered pagination pages (the "1, 2, 3, 4, ..." controls). For each page:
+   - Extract every image and the **actual** video media URL and its caption (if any).
+   - If a post has no caption, generate a short unique caption for that single post only (sexy/short with 1–3 emojis).
+   - Keep image URLs exactly as scraped (do NOT rewrite).
+   - For videos: **do not use video thumbnails**. Open/play each video element to extract the actual `.mp4`/`.webm`/`.mov`/`.m3u8`/`.mpd` stream URL (from `<video>` `currentSrc`, `<source src>`, or, if necessary, from network requests produced during playback).
+2. Combine results from all pages into a single dataset, preserving the 1:1 mapping (URL ⇢ caption).
+3. Upload each item to the new profile following the exact existing profile structure: Images go to the "Images" section with their caption; Videos go to the "Videos" section with their caption.
+4. Save a file `media_urls.txt` (one entry per line) in the format:
+   `[URL] – [Caption]`
+   Example:
+   `https://example.com/image1.jpg – Cozy in red ❤️`
+   `https://example.com/video1.mp4 – Quick clip 🎥💋`
+
+B. PER-PAGE EXTRACTION SNIPPET (RUN IN THE RENDERED PAGE CONTEXT)
+Run this script inside the page (browser context) for each page after it fully loads. It will:
+- Collect images,
+- Attempt to open/play video thumbnails and poll for `currentSrc` and `<source>` URLs,
+- Return an array of `{ url, type, caption, source_method }` where `source_method` is `'dom'` or `'post-play'`.
+
+```js
+// Run in page context (copy & paste into page evaluator)
+(async () => {
+  const pageUrlBase = location.href;
+  const resolve = u => { try { return new URL(u, pageUrlBase).href; } catch { return u; } };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // Find a caption near an element (attributes, figcaption, siblings, parent text)
+  const findCaptionForElement = (el) => {
+    if (!el) return null;
+    const attrs = ['alt','title','aria-label','data-caption','data-title','data-alt'];
+    for (const a of attrs) {
+      try {
+        const v = el.getAttribute && el.getAttribute(a);
+        if (v && v.trim()) return v.trim();
+      } catch(e){}
+    }
+    try {
+      const fig = el.closest && el.closest('figure');
+      if (fig) {
+        const fc = fig.querySelector && fig.querySelector('figcaption');
+        if (fc && fc.textContent && fc.textContent.trim()) return fc.textContent.trim();
+      }
+    } catch(e){}
+    const siblingSelectors = ['.caption','.post-caption','.desc','.description','.meta','.title','.text','.post-text','.content'];
+    for (const sel of siblingSelectors) {
+      try {
+        let s = el.closest && el.closest('figure') ? el.closest('figure').querySelector(sel) : null;
+        if (!s) s = el.parentElement && el.parentElement.querySelector && el.parentElement.querySelector(sel);
+        if (s && s.textContent && s.textContent.trim()) return s.textContent.trim();
+      } catch(e){}
+    }
+    // nearest short text in ancestor chain
+    let cur = el.parentElement;
+    for (let i=0;i<5 && cur;i++,cur=cur.parentElement) {
+      try {
+        const txt = (cur.textContent || '').trim();
+        if (txt && txt.length < 300) return txt.split(/\n/).map(t=>t.trim()).filter(Boolean)[0];
+      } catch(e){}
+    }
+    return null;
+  };
+
+  // Collect images quickly
+  const items = [];
+  document.querySelectorAll('img').forEach(img => {
+    try {
+      const raw = img.getAttribute('src') || img.getAttribute('data-src') || img.src;
+      if (!raw) return;
+      const ext = raw.split('?')[0].split('.').pop().toLowerCase();
+      if (['jpg','jpeg','png','gif','webp','avif','svg','bmp','tiff'].includes(ext)) {
+        const caption = findCaptionForElement(img);
+        items.push({ url: resolve(raw), type: 'image', caption: (caption && caption.length>0) ? caption : null, source_method: 'dom' });
+      }
+    } catch(e){}
+  });
+
+  // Helper to snapshot video sources from DOM
+  const gatherVideoUrlsFromDom = () => {
+    const res = new Map();
+    document.querySelectorAll('video').forEach(v => {
+      try {
+        const candidate = v.currentSrc || v.getAttribute('src');
+        if (candidate) res.set(resolve(candidate), { el: v, method: 'dom' });
+        v.querySelectorAll && v.querySelectorAll('source').forEach(s => {
+          const ssrc = s.getAttribute('src');
+          if (ssrc) res.set(resolve(ssrc), { el: s, method: 'dom' });
+        });
+      } catch(e){}
+    });
+    document.querySelectorAll('source[src]').forEach(s => {
+      try {
+        const ssrc = s.getAttribute('src');
+        if (ssrc && !res.has(resolve(ssrc))) res.set(resolve(ssrc), { el: s, method: 'dom' });
+      } catch(e){}
+    });
+    // anchors linking to media
+    document.querySelectorAll('a[href]').forEach(a => {
+      try {
+        const h = a.getAttribute('href');
+        if (!h) return;
+        const ext = h.split('?')[0].split('.').pop().toLowerCase();
+        if (['mp4','webm','mov','m3u8','mpd','ogv','ogg'].includes(ext) || /youtube\.com|youtu\.be|vimeo\.com/.test(h)) {
+          res.set(resolve(h), { el: a, method: 'dom' });
+        }
+      } catch(e){}
+    });
+    return res;
+  };
+
+  // INITIAL DOM VIDEO SNAPSHOT
+  const initialVideoMap = gatherVideoUrlsFromDom();
+
+  // If initial DOM already has video URLs, add them
+  initialVideoMap.forEach((v, url) => {
+    try {
+      const caption = findCaptionForElement(v.el) || null;
+      items.push({ url, type: 'video', caption: caption, source_method: 'dom' });
+    } catch(e){}
+  });
+
+  // If videos are only thumbnails, we must open/play them. Find clickable candidates likely to open a player.
+  const candidates = new Set();
+  const selectors = [
+    'button[aria-label*="play"]', 'button[aria-label*="Play"]',
+    '.play', '.play-button', '.video-play', '.video-thumb', '.thumbnail', '.thumb',
+    '[data-video]', '[data-video-src]', '[data-play]', '[data-href*="video"]',
+    'img[data-video]', 'a[data-video]', '[onclick]'
+  ];
+  selectors.forEach(sel => {
+    try { document.querySelectorAll(sel).forEach(el => candidates.add(el)); } catch(e){}
+  });
+  // Also add clickable parents of thumbnail images
+  document.querySelectorAll('img').forEach(img => {
+    try {
+      const p = img.parentElement;
+      if (p && (p.tagName && p.tagName.toLowerCase()==='a' || p.querySelector && p.querySelector('.play'))) candidates.add(p);
+    } catch(e){}
+  });
+  // Fallback: elements with role=button or aria-label with "play"
+  document.querySelectorAll('[role="button"], [aria-label]').forEach(el => {
+    try {
+      const lab = (el.getAttribute('aria-label')||'').toLowerCase();
+      if (lab.includes('play') || lab.includes('video')) candidates.add(el);
+    } catch(e){}
+  });
+
+  // Function to safely simulate user interaction
+  const simulateInteraction = async (el) => {
+    try {
+      const evts = ['pointerover','pointerenter','mousemove','mousedown','mouseup','click','touchstart','touchend'];
+      for (const name of evts) {
+        try { el.dispatchEvent(new Event(name, { bubbles: true, cancelable: true })); } catch(e){}
+      }
+      try { el.click && el.click(); } catch(e){}
+      // try to find video inside and call play()
+      try {
+        const vids = el.querySelectorAll && el.querySelectorAll('video');
+        if (vids && vids.length) {
+          for (const v of vids) {
+            try { v.muted = true; v.play && v.play().catch(()=>{}); } catch(e){}
+          }
+        }
+      } catch(e){}
+    } catch(e){}
+  };
+
+  // Simulate interactions on candidates (bounded) and poll for new video srcs
+  const maxSimulate = 40;
+  let simulateCount = 0;
+  const foundVideoUrls = new Map(initialVideoMap); // start with initial DOM-found
+  for (const el of candidates) {
+    if (simulateCount++ >= maxSimulate) break;
+    await simulateInteraction(el);
+    // after interacting, wait and poll for new sources
+    await sleep(1000);
+    const nowMap = gatherVideoUrlsFromDom();
+    nowMap.forEach((val, url) => {
+      if (!foundVideoUrls.has(url)) foundVideoUrls.set(url, val);
+    });
+    await sleep(200);
+  }
+
+  // Poll each video element for currentSrc if not captured yet (gives post-play URLs)
+  const pollTimeout = 4000; // ms
+  const pollInterval = 400; // ms
+  const start = Date.now();
+  while (Date.now() - start < pollTimeout) {
+    document.querySelectorAll('video').forEach(v => {
+      try {
+        const cs = v.currentSrc || v.getAttribute('src');
+        if (cs) foundVideoUrls.set(resolve(cs), { el: v, method: 'post-play' });
+        v.querySelectorAll && v.querySelectorAll('source').forEach(s => {
+          const ssrc = s.getAttribute('src');
+          if (ssrc) foundVideoUrls.set(resolve(ssrc), { el: s, method: 'post-play' });
+        });
+      } catch(e){}
+    });
+    await sleep(pollInterval);
+  }
+
+  // Collect final list: images already in items + videos from foundVideoUrls
+  foundVideoUrls.forEach((meta, url) => {
+    try {
+      // ensure it's video-like or an embed
+      if (/\.(mp4|webm|m3u8|mpd|mov|ogg|ogv)(\?|$)/i.test(url) || /video\.twimg\.com|vimeo\.com|youtube\.com/.test(url)) {
+        const caption = findCaptionForElement(meta.el) || null;
+        items.push({ url, type: 'video', caption: (caption && caption.length>0) ? caption : null, source_method: (meta.method || 'post-play') });
+      }
+    } catch(e){}
+  });
+
+  // Deduplicate, prefer items with captions and prefer post-play over dom if duplicates
+  const final = new Map();
+  items.forEach(it => {
+    const key = it.url.split('#')[0];
+    if (!final.has(key)) final.set(key, it);
+    else {
+      const prev = final.get(key);
+      // prefer captioned item
+      if (!prev.caption && it.caption) final.set(key, it);
+      // prefer post-play source_method if available
+      if (prev.source_method === 'dom' && it.source_method === 'post-play') final.set(key, it);
+    }
+  });
+
+  // Export array of {url, type, caption, source_method}
+  return Array.from(final.values());
+})();
+````
+
+C. PAGINATION LOGIC (NUMBERED PAGES)
+
+1. Identify the pagination container. Common selectors to try: `nav.pagination`, `.pagination`, `.pager`, `.page-numbers`, `.pagination-wrapper`, `.pager__numbers`. Prefer the container that holds numeric links (1,2,3,...).
+2. Determine the last page number:
+
+   * If numeric links 1..N are present, the largest number is the last page.
+   * If a condensed “…” appears, parse the largest numeric value shown (if that’s not reliable, iterate page-by-page until a numeric button for `i` is not found).
+3. Iteration behavior:
+
+   * Start on the initial page loaded.
+   * For each page index `i` from currentPage+1 to lastPage:
+     a. Attempt to find and click the page button/link whose visible text equals the numeric `i`. Use `element.click()` in page context.
+     b. After click, wait for content to load: require `document.readyState === 'complete'` and presence of at least one media item returned by the extraction snippet OR wait up to the per-page timeout (default 4–6 seconds). Retry the click up to 3 times if the page does not load correctly.
+     c. If clicking the numeric button triggers a full navigation, wait for navigation to finish (or use the numeric link's `href` and fetch that page in a controlled browser context).
+     d. Re-run the PER-PAGE EXTRACTION snippet on the newly loaded page and append results to your dataset.
+   * Stop when numeric page `i` cannot be found/clicked or when `i > lastPage`.
+4. Rate-limiting: add a 500–1500ms delay between page clicks/loads to avoid rate-limits or blocking.
+
+D. CAPTION RULES
+
+1. If a scraped item has a caption (non-empty), use it exactly (trim whitespace).
+2. If caption is missing or empty, generate a short unique caption for that item only:
+
+   * Keep it unique across the dataset (do not repeat): use a small pool or generate with deterministic variation.
+   * Format: 3–7 words, include 1–3 emojis, no profanity, length ≤ 120 characters.
+   * Examples: `Sultry sunset vibes 🔥🌙`, `Quick tease 😏💋`, `Steamy snapshot 🔥📸`
+3. Do not alter scraped captions; only trim whitespace.
+4. Ensure caption encoding is safe for JSON and for your upload endpoint (escape/encode characters as needed).
+
+E. OUTPUT / UPLOAD
+
+1. After finishing all pages, create `media_urls.txt` with one line per item, exact format:
+   `[URL] – [Caption]`
+
+   * Include both images and videos.
+2. Upload to the newly created profile:
+
+   * Follow the existing profile structure precisely.
+   * Add each image URL with its caption under **Images**.
+   * Add each video URL with its caption under **Videos**.
+   * Preserve any metadata fields used by other profiles (tags, posted\_at, content\_type) — follow the exact schema used by working uploads.
+   * Prefer video URLs obtained via post-play (DOM `currentSrc`) or network capture if available. If both DOM and network results exist, prefer the network-captured URL only if DOM URL is a thumbnail or generic wrapper.
+3. Verification:
+
+   * After upload, preview the first 5 uploaded items in the profile (URL + caption).
+   * For each of the first 5, verify display by checking HTTP response (status 200) and that the platform can render it. If any fail (HTTP 4xx/5xx or broken), retry fetching that URL up to 2 times; if still failing mark as failed and continue.
+   * Produce a summary listing scraped items, successful uploads, failed uploads with reasons.
+
+F. ROBUSTNESS, NETWORK-CAPTURE FALLBACK, & SAFETY
+
+1. Respect site rate limits: wait 500–1500ms between page fetches/clicks and 200–600ms between per-item actions.
+2. If a page triggers a CAPTCHA or anti-bot wall, stop immediately and report: `CAPTCHA encountered on page X`. Do not attempt to bypass.
+3. Log all errors, click retries, and network failures in detail. If repeated failures occur for more than 3 pages, abort and provide the log.
+4. Timeouts & retries: per-page load timeout default 6s (configurable). Click retry up to 3 times.
+5. If extracting video streams fails with DOM inspection (no `currentSrc` or `<source>` visible after post-play polling), perform a network-capture fallback with a browser automation tool (Playwright/Puppeteer/Selenium with DevTools network capture):
+
+   * Launch a controlled browser context for the page (prefer Playwright).
+   * Start network logging before simulating play (listen for requests/responses).
+   * Simulate the same interaction/clicks used in the page-context opener script (mute and call `.play()` on any `<video>`).
+   * Capture requests/responses and collect URLs where response headers show `content-type: video/*` or request URLs end with video extensions (`.mp4`, `.webm`, `.m3u8`, `.mpd`, etc.).
+   * Use these network-captured URLs as canonical video URLs for that post.
+   * Stop capture after a short timeout (2–6s) per interaction and deduplicate results.
+6. Always verify captured network URLs via a HEAD/GET to ensure `content-type` is a video and HTTP status 200 before uploading.
+7. Never attempt to bypass authentication, DRM, paywalls, or geoblocking. If media requires authentication, mark it as protected and skip.
+
+(Playwright network-capture example — run externally when fallback is needed)
+
+```js
+// Node.js Playwright example (fallback; run server-side)
+// npm i playwright
+const fs = require('fs');
+const { chromium } = require('playwright');
+
+(async () => {
+  const startUrl = 'PUT_PAGE_URL_HERE';
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const mediaUrls = new Set();
+
+  page.on('response', async (response) => {
+    try {
+      const url = response.url();
+      const headers = response.headers();
+      const ct = headers['content-type'] || '';
+      if (/video\//i.test(ct) || url.match(/\.(mp4|webm|m3u8|mpd|mov|ogg|ogv)(\?|$)/i)) {
+        mediaUrls.add(url);
+      }
+    } catch(e){}
+  });
+
+  await page.goto(startUrl, { waitUntil: 'networkidle' });
+
+  // Example: click possible play buttons (customize selectors)
+  const playSelectors = ['.play', '.video-thumb', '.play-button', 'button[aria-label*="play"]'];
+  for (const sel of playSelectors) {
+    try {
+      const els = await page.$$(sel);
+      for (const el of els) {
+        await el.click({ timeout: 2000 }).catch(()=>{});
+        // try to play video elements
+        await page.evaluate(()=> {
+          document.querySelectorAll('video').forEach(v=>{ try { v.muted = true; v.play && v.play().catch(()=>{}); } catch(e){} });
+        });
+        await page.waitForTimeout(1500);
+      }
+    } catch(e){}
+  }
+
+  // collect DOM video srcs too
+  const domVideos = await page.evaluate(()=> {
+    const out=[];
+    document.querySelectorAll('video, source').forEach(el=>{
+      try { const s = el.currentSrc || el.src || (el.getAttribute && el.getAttribute('src')); if (s) out.push(s); } catch(e){}
+    });
+    return out;
+  });
+  domVideos.forEach(u=>mediaUrls.add(u));
+
+  fs.writeFileSync('playwright_captured_videos.txt', Array.from(mediaUrls).join('\n'));
+  await browser.close();
+})();
+```
+
+G. FINAL REPORT
+When done, produce a JSON summary object like:
+{
+"source\_url": "<start url>",
+"pages\_visited": X,
+"items\_scraped": Y,
+"items\_uploaded": Z,
+"failed\_uploads": \[{ "url": "...", "reason": "404" }, ...],
+"file\_saved": "media\_urls.txt",
+"notes": "Any CAPTCHAs, protected media, or unexpected errors"
+}
+
+H. IMPORTANT NOTES FOR THE DEVELOPER / AGENT
+
+1. Do not change the profile schema/structure. Use the exact fields and upload endpoints used by existing working profiles.
+2. If the site uses infinite-scroll (no numbered pages), do NOT use this numbered-page workflow — switch to the infinite-scroll procedure (scroll-and-wait) instead.
+3. If you need to run the extraction snippet outside the browser (server-side), ensure the page is fully rendered (use Playwright/Selenium and wait for networkidle) before running the snippet.
+4. Keep a local copy of `media_urls.txt` and upload logs for auditing.
+5. Provide incremental logs while running: pages visited, items found per page, uploads in progress, retries, and any failures.
+6. Execute the workflow now for the provided gallery start URL. Provide incremental logs and final JSON summary. Stop and ask for manual approval if any CAPTCHA or major error occurs.
+
+`

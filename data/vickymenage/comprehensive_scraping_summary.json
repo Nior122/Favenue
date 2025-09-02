@@ -1,0 +1,49 @@
+{
+  "source_url_base": "https://www.twpornstars.com/vickymenage",
+  "pages_visited": 5,
+  "pages_summary": {
+    "page1": {
+      "url": "https://www.twpornstars.com/vickymenage",
+      "itemsExtracted": 28,
+      "images": 12,
+      "videos": 16
+    },
+    "page2": {
+      "url": "https://www.twpornstars.com/vickymenage?page=2",
+      "itemsExtracted": 17,
+      "images": 1,
+      "videos": 16
+    },
+    "page3": {
+      "url": "https://www.twpornstars.com/vickymenage?page=3",
+      "itemsExtracted": 17,
+      "images": 5,
+      "videos": 12
+    },
+    "page4": {
+      "url": "https://www.twpornstars.com/vickymenage?page=4",
+      "itemsExtracted": 24,
+      "images": 17,
+      "videos": 7
+    },
+    "page5": {
+      "url": "https://www.twpornstars.com/vickymenage?page=5",
+      "itemsExtracted": 20,
+      "images": 16,
+      "videos": 4
+    }
+  },
+  "total_items_scraped": 106,
+  "unique_items_after_deduplication": 106,
+  "items_uploaded": 106,
+  "content_breakdown": {
+    "images": 51,
+    "videos": 55
+  },
+  "failed_uploads": [],
+  "files_created": {
+    "media_urls_txt": "data/vickymenage/media_urls.txt",
+    "individual_posts": "106 JSON files (post-001.json through post-106.json)"
+  },
+  "workflow_notes": "Multi-page comprehensive scraping completed successfully following pagination workflow requirements"
+}

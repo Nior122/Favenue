@@ -1,6 +1,8 @@
 {
-  "totalItems": 0,
+  "totalFound": 0,
+  "validMedia": 0,
+  "processed": 0,
   "images": 0,
   "videos": 0,
-  "processed": "2025-09-02T19:44:08.019Z"
+  "timestamp": "2025-09-02T19:48:36.722Z"
 }

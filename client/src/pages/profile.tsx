@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileWithImages } from "@shared/schema";
 import UnlockPopup from "@/components/UnlockPopup";
+import MediaPlayer from "@/components/MediaPlayer";
 import { useToast } from "@/hooks/use-toast";
 
 interface Post {
@@ -525,33 +526,15 @@ export default function ProfilePage() {
                   >
                     {/* Post Image */}
                     <div className="relative aspect-[3/4] bg-gray-800">
-                      {post.contentType === 'video' ? (
-                        <div className="relative w-full h-full">
-                          <video
-                            src={post.videoUrl}
-                            poster={post.thumbnailUrl}
-                            className="w-full h-full object-cover"
-                            muted
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-black/50 rounded-full p-2">
-                              <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (post.imageUrl ? (
-                        <img
-                          src={post.imageUrl || post.videoUrl}
-                          alt={post.title}
-                          className={`w-full h-full object-cover ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? '' : 'pointer-events-none'}`}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">No Image</span>
-                        </div>
-                      ))}
+                      <MediaPlayer
+                        src={post.contentType === 'video' ? (post.videoUrl || '') : (post.imageUrl || post.videoUrl || '')}
+                        poster={post.thumbnailUrl}
+                        contentType={post.contentType}
+                        alt={post.title}
+                        className={`w-full h-full object-cover ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? '' : 'pointer-events-none'}`}
+                        controls={false}
+                        muted={true}
+                      />
                       
                       {/* Date Overlay - top left */}
                       <div className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-black/70 text-white text-xs px-1 py-0.5 sm:px-2 sm:py-1 rounded">
@@ -682,22 +665,16 @@ export default function ProfilePage() {
               <X className="w-5 h-5" />
             </Button>
             
-            {selectedPost.contentType === 'video' ? (
-              <video
-                src={selectedPost.videoUrl}
-                poster={selectedPost.thumbnailUrl}
-                controls
-                className="max-w-full max-h-full object-contain"
-                data-testid="modal-video"
-              />
-            ) : (
-              <img
-                src={selectedPost.imageUrl || selectedPost.videoUrl}
-                alt={selectedPost.title}
-                className="w-full h-auto object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
+            <MediaPlayer
+              src={selectedPost.contentType === 'video' ? (selectedPost.videoUrl || '') : (selectedPost.imageUrl || selectedPost.videoUrl || '')}
+              poster={selectedPost.thumbnailUrl}
+              contentType={selectedPost.contentType}
+              alt={selectedPost.title}
+              className="w-full h-auto object-contain"
+              controls={true}
+              onClick={(e) => e.stopPropagation()}
+              autoPlay={selectedPost.contentType === 'video'}
+            />
             <div className="bg-gray-900 p-4 text-white">
               <p className="text-sm mb-2">{selectedPost.description}</p>
               <p className="text-xs text-gray-400">{selectedPost.date}</p>

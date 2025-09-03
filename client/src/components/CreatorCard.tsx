@@ -35,12 +35,10 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
       {/* Card with Background Image - horizontal layout like screenshot */}
       <div className="relative h-20 overflow-hidden rounded-lg bg-gray-800">
         {backgroundImage ? (
-          <MediaPlayer
+          <img
             src={backgroundImage}
-            contentType="image"
             alt="Background"
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
-            controls={false}
           />
         ) : (
           <div className="w-full h-full bg-gray-800"></div>
@@ -72,15 +70,11 @@ export default function CreatorCard({ profile, onView, onFavorite }: CreatorCard
           {/* Profile Picture */}
           <div className="relative flex-shrink-0">
             {profileImage ? (
-              <div className="w-12 h-12 rounded-lg border-2 border-white/20 overflow-hidden">
-                <MediaPlayer
-                  src={profileImage}
-                  contentType="image"
-                  alt={profile.name}
-                  className="w-full h-full object-cover"
-                  controls={false}
-                />
-              </div>
+              <img
+                src={profileImage}
+                alt={profile.name}
+                className="w-12 h-12 rounded-lg object-cover border-2 border-white/20"
+              />
             ) : (
               <div className="w-12 h-12 rounded-lg bg-gray-700 border-2 border-white/20 flex items-center justify-center">
                 <span className="text-white text-xs font-bold">

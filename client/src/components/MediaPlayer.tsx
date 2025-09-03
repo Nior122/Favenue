@@ -90,6 +90,7 @@ export default function MediaPlayer({
   };
 
   const handleImageError = () => {
+    console.log('Image failed to load:', src);
     setImageError(true);
   };
 
@@ -100,23 +101,20 @@ export default function MediaPlayer({
   if (contentType === 'image') {
     return (
       <div className={`relative ${className}`} onClick={onClick}>
-        {imageError ? (
-          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+        />
+        {imageError && (
+          <div className="absolute inset-0 w-full h-full bg-gray-800 flex items-center justify-center">
             <div className="text-center text-gray-400">
               <RotateCcw className="w-8 h-8 mx-auto mb-2" />
               <p className="text-sm">Image failed to load</p>
             </div>
           </div>
-        ) : (
-          <img
-            src={src}
-            alt={alt}
-            className="w-full h-full object-cover"
-            onError={handleImageError}
-            onLoad={handleImageLoad}
-            crossOrigin="anonymous"
-            referrerPolicy="no-referrer"
-          />
         )}
       </div>
     );
@@ -138,7 +136,6 @@ export default function MediaPlayer({
         autoPlay={autoPlay}
         playsInline
         preload="metadata"
-        crossOrigin="anonymous"
         onError={(e) => {
           console.error('Video error:', e);
         }}

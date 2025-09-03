@@ -2,7 +2,6 @@
   "id": "eboniespublicness-106",
   "title": "Lets Make A Movie 🎬 At The Movies📽️🎞️",
   "description": "Lets Make A Movie 🎬 At The Movies📽️🎞️",
-  "imageUrl": "https://video.twimg.com/amplify_video/1946012406687092736/vid/avc1/640x360/CdM1rJW9rHFW6MTN.mp4?tag=21",
   "contentType": "video",
   "tags": [
     "Exclusive",
@@ -11,5 +10,7 @@
   ],
   "profileId": "eboniespublicness",
   "createdAt": "2025-09-02T22:23:16.223Z",
-  "updatedAt": "2025-09-02T22:23:16.223Z"
+  "updatedAt": "2025-09-03T13:34:30.135Z",
+  "videoUrl": "https://video.twimg.com/amplify_video/1946012406687092736/vid/avc1/640x360/CdM1rJW9rHFW6MTN.mp4?tag=21",
+  "thumbnailUrl": "https://pbs.twimg.com/amplify_video_thumb/1946012406687092736/img/ESXJ32zF5Psjvwq6.jpg"
 }

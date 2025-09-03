@@ -11,7 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Post {
   id: string;
-  imageUrl: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  contentType: 'image' | 'video';
   title: string;
   description: string;
   date: string;
@@ -238,7 +241,10 @@ export default function ProfilePage() {
     // Convert profile images to posts format using actual post data
     const posts = profile.images.map((image, index) => ({
       id: image.id,
-      imageUrl: image.imageUrl,
+      imageUrl: (image as any).imageUrl,
+      videoUrl: (image as any).videoUrl,
+      thumbnailUrl: (image as any).thumbnailUrl,
+      contentType: (image as any).contentType || 'image',
       title: image.title || '',
       description: image.description || '',
       date: image.createdAt ? new Date(image.createdAt).toLocaleDateString('en-CA') : '2025/08/12',
@@ -519,9 +525,25 @@ export default function ProfilePage() {
                   >
                     {/* Post Image */}
                     <div className="relative aspect-[3/4] bg-gray-800">
-                      {post.imageUrl ? (
+                      {post.contentType === 'video' ? (
+                        <div className="relative w-full h-full">
+                          <video
+                            src={post.videoUrl}
+                            poster={post.thumbnailUrl}
+                            className="w-full h-full object-cover"
+                            muted
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black/50 rounded-full p-2">
+                              <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (post.imageUrl ? (
                         <img
-                          src={post.imageUrl}
+                          src={post.imageUrl || post.videoUrl}
                           alt={post.title}
                           className={`w-full h-full object-cover ${(unlockedImages.has(post.id) && !viewedImages.has(post.id)) ? '' : 'pointer-events-none'}`}
                         />
@@ -529,7 +551,7 @@ export default function ProfilePage() {
                         <div className="w-full h-full bg-gray-700 flex items-center justify-center">
                           <span className="text-gray-400 text-xs">No Image</span>
                         </div>
-                      )}
+                      ))}
                       
                       {/* Date Overlay - top left */}
                       <div className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-black/70 text-white text-xs px-1 py-0.5 sm:px-2 sm:py-1 rounded">
@@ -660,12 +682,22 @@ export default function ProfilePage() {
               <X className="w-5 h-5" />
             </Button>
             
-            <img
-              src={selectedPost.imageUrl}
-              alt={selectedPost.title}
-              className="w-full h-auto object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+            {selectedPost.contentType === 'video' ? (
+              <video
+                src={selectedPost.videoUrl}
+                poster={selectedPost.thumbnailUrl}
+                controls
+                className="max-w-full max-h-full object-contain"
+                data-testid="modal-video"
+              />
+            ) : (
+              <img
+                src={selectedPost.imageUrl || selectedPost.videoUrl}
+                alt={selectedPost.title}
+                className="w-full h-auto object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
             <div className="bg-gray-900 p-4 text-white">
               <p className="text-sm mb-2">{selectedPost.description}</p>
               <p className="text-xs text-gray-400">{selectedPost.date}</p>

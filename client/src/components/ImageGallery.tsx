@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { ProfileImage } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 
-interface ImageGalleryProps {
+interface MediaGalleryProps {
   images: ProfileImage[];
 }
 
-export default function ImageGallery({ images }: ImageGalleryProps) {
+export default function ImageGallery({ images }: MediaGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -44,11 +44,27 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             onClick={() => openLightbox(index)}
             data-testid={`gallery-image-${index}`}
           >
-            <img
-              src={image.imageUrl}
-              alt={(image as any).description || (image as any).title || `Portfolio Item ${index + 1}`}
-              className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
-            />
+            {(image as any).contentType === 'video' ? (
+              <>
+                <video
+                  src={(image as any).videoUrl}
+                  poster={(image as any).thumbnailUrl}
+                  className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
+                  muted
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black/50 rounded-full p-3">
+                    <Play className="w-6 h-6 text-white fill-current" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <img
+                src={(image as any).imageUrl || (image as any).videoUrl}
+                alt={(image as any).description || (image as any).title || `Portfolio Item ${index + 1}`}
+                className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
+              />
+            )}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <div className="bg-white/90 rounded-full p-2">
                 <svg className="w-6 h-6 text-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,13 +125,24 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
             </>
           )}
 
-          <img
-            src={images[currentImageIndex]?.imageUrl}
-            alt={(images[currentImageIndex] as any)?.description || (images[currentImageIndex] as any)?.title || `Portfolio Item ${currentImageIndex + 1}`}
-            className="max-w-full max-h-full object-contain"
-            onClick={(e) => e.stopPropagation()}
-            data-testid="lightbox-image"
-          />
+          {(images[currentImageIndex] as any)?.contentType === 'video' ? (
+            <video
+              src={(images[currentImageIndex] as any)?.videoUrl}
+              poster={(images[currentImageIndex] as any)?.thumbnailUrl}
+              controls
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+              data-testid="lightbox-video"
+            />
+          ) : (
+            <img
+              src={(images[currentImageIndex] as any)?.imageUrl || (images[currentImageIndex] as any)?.videoUrl}
+              alt={(images[currentImageIndex] as any)?.description || (images[currentImageIndex] as any)?.title || `Portfolio Item ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+              data-testid="lightbox-image"
+            />
+          )}
 
           {/* Image counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm" data-testid="image-counter">

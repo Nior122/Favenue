@@ -2,7 +2,6 @@
   "id": "eboniespublicness-078",
   "title": "Store Run To Quench Your Thirsty Thoughts",
   "description": "Store Run To Quench Your Thirsty Thoughts",
-  "imageUrl": "https://video.twimg.com/amplify_video/1935443566748106752/vid/avc1/720x1280/KJIw-sSNLkx9U980.mp4?tag=21",
   "contentType": "video",
   "tags": [
     "Exclusive",
@@ -11,5 +10,7 @@
   ],
   "profileId": "eboniespublicness",
   "createdAt": "2025-09-02T22:23:16.214Z",
-  "updatedAt": "2025-09-02T22:23:16.214Z"
+  "updatedAt": "2025-09-03T13:34:30.064Z",
+  "videoUrl": "https://video.twimg.com/amplify_video/1935443566748106752/vid/avc1/720x1280/KJIw-sSNLkx9U980.mp4?tag=21",
+  "thumbnailUrl": "https://pbs.twimg.com/amplify_video_thumb/1935443566748106752/img/ESXJ32zF5Psjvwq6.jpg"
 }

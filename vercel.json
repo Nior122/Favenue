@@ -28,6 +28,14 @@
       "dest": "/api/auth/user.js"
     },
     {
+      "src": "/api/video-proxy",
+      "dest": "/api/video-proxy.js"
+    },
+    {
+      "src": "/api/image-proxy",
+      "dest": "/api/image-proxy.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1.js"
     },

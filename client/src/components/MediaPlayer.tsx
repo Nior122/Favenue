@@ -46,11 +46,31 @@ export default function MediaPlayer({
     setVideoError(false);
   };
 
+  // Helper function for Twitter image proxy
+  const getImageSource = (imageSrc: string) => {
+    if (imageSrc && imageSrc.includes('pbs.twimg.com')) {
+      // Use our proxy for Twitter images
+      return `/api/image-proxy?url=${encodeURIComponent(imageSrc)}`;
+    }
+    return imageSrc;
+  };
+
+  // Helper function for Twitter video proxy
+  const getVideoSource = (videoSrc: string) => {
+    if (videoSrc && videoSrc.includes('video.twimg.com')) {
+      // Use our proxy for Twitter videos
+      return `/api/video-proxy?url=${encodeURIComponent(videoSrc)}`;
+    }
+    return videoSrc;
+  };
+
   if (contentType === 'image') {
+    const imageSource = getImageSource(src);
+    
     return (
       <div className={`relative ${className}`} onClick={onClick}>
         <img
-          src={src}
+          src={imageSource}
           alt={alt}
           className="w-full h-full object-cover"
           onError={handleImageError}
@@ -68,20 +88,19 @@ export default function MediaPlayer({
     );
   }
 
-  // Use video proxy for Twitter videos to bypass CORS
-  const getVideoSource = (videoSrc: string) => {
-    if (videoSrc && videoSrc.includes('video.twimg.com')) {
-      // Use our proxy for Twitter videos
-      return `/api/video-proxy?url=${encodeURIComponent(videoSrc)}`;
-    }
-    return videoSrc;
-  };
-
+  // Handle video content
   const videoSource = getVideoSource(src);
+  const posterSource = poster ? getImageSource(poster) : undefined;
 
   // Console log video props for debugging
   if (contentType === 'video') {
-    console.log('🎥 Video MediaPlayer props:', { originalSrc: src, proxiedSrc: videoSource, poster, contentType });
+    console.log('🎥 Video MediaPlayer props:', { 
+      originalSrc: src, 
+      proxiedSrc: videoSource, 
+      originalPoster: poster, 
+      proxiedPoster: posterSource, 
+      contentType 
+    });
   }
 
   return (
@@ -89,7 +108,7 @@ export default function MediaPlayer({
       <video 
         controls={controls} 
         width="100%" 
-        poster={poster}
+        poster={posterSource}
         className="w-full h-full object-cover"
         muted={muted}
         autoPlay={autoPlay}

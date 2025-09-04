@@ -1,8 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Star, MapPin, Calendar, Shield, Eye, Users } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Heart, Star, MapPin, Calendar, Shield, Eye, Users, Image, Video } from "lucide-react";
 import { ProfileWithImages } from "@shared/schema";
+import MediaPlayer from "./MediaPlayer";
 
 interface ProfileModalProps {
   profile: ProfileWithImages | null;
@@ -15,8 +17,27 @@ interface ProfileModalProps {
 export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isFavorited }: ProfileModalProps) {
   if (!profile) return null;
 
-  const mainImage = profile.images?.find(img => img.isMainImage) || profile.images?.[0];
-  const galleryImages = profile.images?.filter(img => !img.isMainImage) || [];
+  // Separate images and videos based on contentType
+  const allMedia = profile.images || [];
+  const images = allMedia.filter(item => (item as any).contentType !== 'video');
+  const videos = allMedia.filter(item => (item as any).contentType === 'video');
+  const mainImage = images.find(img => img.isMainImage) || images[0];
+
+  // Debug logging when modal opens
+  console.log('🔍 ProfileModal Debug:', {
+    profileName: profile.name,
+    totalMedia: allMedia.length,
+    imagesCount: images.length,
+    videosCount: videos.length,
+    contentTypes: allMedia.map(item => (item as any).contentType),
+    sampleItems: allMedia.slice(0, 3).map(item => ({
+      id: item.id,
+      contentType: (item as any).contentType,
+      hasImageUrl: !!(item as any).imageUrl,
+      hasVideoUrl: !!(item as any).videoUrl
+    }))
+  });
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -28,7 +49,7 @@ export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isF
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Profile Image & Gallery */}
+          {/* Media Content with Tabs */}
           <div className="space-y-4">
             <div className="relative overflow-hidden rounded-lg">
               {mainImage?.imageUrl ? (
@@ -52,25 +73,69 @@ export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isF
               </Button>
             </div>
 
-            {/* Gallery thumbnails */}
-            {galleryImages.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
-                {galleryImages.slice(0, 6).map((image, index) => (
-                  <div key={image.id} className="relative group cursor-pointer">
-                    <img
-                      src={image.imageUrl}
-                      alt={`${profile.name} gallery ${index + 1}`}
-                      className="w-full h-20 object-cover rounded group-hover:opacity-75 transition"
-                    />
-                    {index === 5 && galleryImages.length > 6 && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-semibold rounded">
-                        +{galleryImages.length - 5}
+            {/* Images and Videos Tabs */}
+            <Tabs defaultValue="images" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="images" className="flex items-center gap-2">
+                  <Image className="w-4 h-4" />
+                  Images ({images.length})
+                </TabsTrigger>
+                <TabsTrigger value="videos" className="flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  Videos ({videos.length})
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="images" className="mt-4">
+                {images.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                    {images.map((image, index) => (
+                      <div key={image.id} className="relative group cursor-pointer">
+                        <img
+                          src={image.imageUrl || ''}
+                          alt={`${profile.name} image ${index + 1}`}
+                          className="w-full h-20 object-cover rounded group-hover:opacity-75 transition"
+                        />
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    <div className="text-center">
+                      <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No images available</p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="videos" className="mt-4">
+                {videos.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                    {videos.map((video, index) => (
+                      <div key={video.id} className="relative group cursor-pointer">
+                        <MediaPlayer
+                          src={(video as any).videoUrl || ''}
+                          poster={(video as any).thumbnailUrl || ''}
+                          contentType="video"
+                          alt={`${profile.name} video ${index + 1}`}
+                          className="w-full h-20 rounded"
+                          controls={true}
+                          muted={true}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    <div className="text-center">
+                      <Video className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No videos available</p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Profile Info */}

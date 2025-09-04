@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated as replitAuth } from "./replitAuth";
 import { setupProdAuth, isAuthenticated as prodAuth, isAdmin as prodAdmin } from "./prodAuth";
 import { insertProfileSchema, insertProfileImageSchema } from "@shared/schema";
 import { z } from "zod";
+import axios from "axios";
 
 // Use different auth based on environment
 const isProduction = process.env.NODE_ENV === "production" || !process.env.REPL_ID;
@@ -47,6 +48,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Video proxy endpoint to handle CORS issues with Twitter videos
+  app.get("/api/video-proxy", async (req, res) => {
+    try {
+      const videoUrl = req.query.url as string;
+      
+      if (!videoUrl) {
+        return res.status(400).json({ error: "Video URL is required" });
+      }
+
+      // Only allow Twitter video URLs for security
+      if (!videoUrl.includes('video.twimg.com')) {
+        return res.status(403).json({ error: "Only Twitter video URLs are allowed" });
+      }
+
+      console.log(`🎥 Proxying video: ${videoUrl}`);
+
+      // Fetch the video from Twitter
+      const response = await axios({
+        method: 'GET',
+        url: videoUrl,
+        responseType: 'stream',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://twitter.com/',
+        }
+      });
+
+      // Set appropriate headers
+      res.set({
+        'Content-Type': response.headers['content-type'] || 'video/mp4',
+        'Content-Length': response.headers['content-length'],
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      });
+
+      // Pipe the video data to the response
+      response.data.pipe(res);
+
+    } catch (error) {
+      console.error("Error proxying video:", error);
+      res.status(500).json({ error: "Failed to proxy video" });
     }
   });
 

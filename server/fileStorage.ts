@@ -190,10 +190,20 @@ export const fileStorage: IStorage = {
 
                 // Extract from embedCode if video fields are missing
                 if (!videoUrl && post.embedCode && post.contentType === 'video') {
+                  console.log(`🎥 Extracting video URLs for post ${file}:`, post.embedCode);
                   const srcMatch = post.embedCode.match(/src='([^']+)'/);
                   const posterMatch = post.embedCode.match(/poster='([^']+)'/);
-                  if (srcMatch) videoUrl = srcMatch[1];
-                  if (posterMatch) thumbnailUrl = posterMatch[1];
+                  if (srcMatch) {
+                    videoUrl = srcMatch[1];
+                    console.log(`✅ Extracted video URL: ${videoUrl}`);
+                  }
+                  if (posterMatch) {
+                    thumbnailUrl = posterMatch[1];
+                    console.log(`✅ Extracted thumbnail URL: ${thumbnailUrl}`);
+                  }
+                  if (!srcMatch) {
+                    console.log(`❌ Could not extract video URL from embedCode`);
+                  }
                 }
 
                 return {

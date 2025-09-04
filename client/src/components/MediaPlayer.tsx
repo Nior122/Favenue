@@ -25,6 +25,7 @@ export default function MediaPlayer({
   onClick
 }: MediaPlayerProps) {
   const [imageError, setImageError] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   const handleImageError = () => {
     console.log('Image failed to load:', src);
@@ -33,6 +34,16 @@ export default function MediaPlayer({
 
   const handleImageLoad = () => {
     setImageError(false);
+  };
+
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    console.error('Video failed to load:', { src, poster, error: e });
+    setVideoError(true);
+  };
+
+  const handleVideoLoad = () => {
+    console.log('Video loaded successfully:', { src, poster });
+    setVideoError(false);
   };
 
   if (contentType === 'image') {
@@ -57,6 +68,22 @@ export default function MediaPlayer({
     );
   }
 
+  // Use video proxy for Twitter videos to bypass CORS
+  const getVideoSource = (videoSrc: string) => {
+    if (videoSrc && videoSrc.includes('video.twimg.com')) {
+      // Use our proxy for Twitter videos
+      return `/api/video-proxy?url=${encodeURIComponent(videoSrc)}`;
+    }
+    return videoSrc;
+  };
+
+  const videoSource = getVideoSource(src);
+
+  // Console log video props for debugging
+  if (contentType === 'video') {
+    console.log('🎥 Video MediaPlayer props:', { originalSrc: src, proxiedSrc: videoSource, poster, contentType });
+  }
+
   return (
     <div className={`relative ${className}`} onClick={onClick}>
       <video 
@@ -68,13 +95,22 @@ export default function MediaPlayer({
         autoPlay={autoPlay}
         playsInline
         preload="metadata"
-        onError={(e) => {
-          console.error('Video error:', e);
-        }}
+        onError={handleVideoError}
+        onLoadedData={handleVideoLoad}
+        onCanPlay={() => console.log('Video can play:', videoSource)}
       >
-        <source src={src} type="video/mp4" />
+        <source src={videoSource} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
+      {videoError && (
+        <div className="absolute inset-0 w-full h-full bg-gray-800 flex items-center justify-center">
+          <div className="text-center text-gray-400">
+            <RotateCcw className="w-8 h-8 mx-auto mb-2" />
+            <p className="text-sm">Video failed to load</p>
+            <p className="text-xs mt-1">Source: {src?.substring(0, 50)}...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

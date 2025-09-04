@@ -169,10 +169,27 @@ export const fileStorage: IStorage = {
               try {
                 const postData = await fs.readFile(path.join(profileDir, file), 'utf-8');
                 const post = JSON.parse(postData);
+                
+                // Handle video URL and thumbnail extraction
+                let videoUrl = post.videoUrl;
+                let thumbnailUrl = post.thumbnailUrl;
+                
+                // Extract from embedCode if video fields are missing
+                if (!videoUrl && post.embedCode && post.contentType === 'video') {
+                  const srcMatch = post.embedCode.match(/src='([^']+)'/);
+                  const posterMatch = post.embedCode.match(/poster='([^']+)'/);
+                  if (srcMatch) videoUrl = srcMatch[1];
+                  if (posterMatch) thumbnailUrl = posterMatch[1];
+                }
+                
                 return {
                   id: file.replace('.json', ''),
                   profileId: profileId,
                   imageUrl: post.imageUrl,
+                  videoUrl: videoUrl,
+                  thumbnailUrl: thumbnailUrl,
+                  contentType: post.contentType || 'image',
+                  embedCode: post.embedCode,
                   title: post.title || '',
                   description: post.description || '',
                   tags: post.tags || [],
@@ -398,7 +415,11 @@ export const fileStorage: IStorage = {
     const image: ProfileImage = {
       id: nanoid(),
       profileId: imageData.profileId,
-      imageUrl: imageData.imageUrl,
+      imageUrl: imageData.imageUrl || null,
+      videoUrl: imageData.videoUrl || null,
+      thumbnailUrl: imageData.thumbnailUrl || null,
+      contentType: imageData.contentType || 'image',
+      embedCode: imageData.embedCode || null,
       title: imageData.title || null,
       description: imageData.description || null,
       tags: imageData.tags || null,

@@ -62,7 +62,11 @@ export const profiles = pgTable("profiles", {
 export const profileImages = pgTable("profile_images", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   profileId: varchar("profile_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
-  imageUrl: varchar("image_url").notNull(),
+  imageUrl: varchar("image_url"),
+  videoUrl: varchar("video_url"),
+  thumbnailUrl: varchar("thumbnail_url"),
+  contentType: varchar("content_type").default('image'),
+  embedCode: text("embed_code"),
   title: varchar("title"),
   description: text("description"),
   tags: text("tags").array(),

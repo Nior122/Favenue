@@ -1,0 +1,44 @@
+[
+  {
+    "id": "example-image-post",
+    "title": "Beautiful Sunset Photo",
+    "description": "Amazing sunset captured during golden hour",
+    "imageUrl": "https://example.com/sunset.jpg",
+    "videoUrl": null,
+    "thumbnailUrl": null,
+    "contentType": "image",
+    "embedCode": null,
+    "tags": ["nature", "sunset", "photography"],
+    "profileId": "photographer123",
+    "createdAt": "2025-09-04T16:00:00.000Z",
+    "updatedAt": "2025-09-04T16:00:00.000Z"
+  },
+  {
+    "id": "example-video-post-modern",
+    "title": "Dance Performance Video",
+    "description": "Professional dance routine in the studio",
+    "imageUrl": null,
+    "videoUrl": "https://video.example.com/dance.mp4",
+    "thumbnailUrl": "https://images.example.com/dance-thumb.jpg",
+    "contentType": "video",
+    "embedCode": null,
+    "tags": ["dance", "performance", "studio"],
+    "profileId": "dancer456",
+    "createdAt": "2025-09-04T16:00:00.000Z",
+    "updatedAt": "2025-09-04T16:00:00.000Z"
+  },
+  {
+    "id": "example-video-post-legacy",
+    "title": "Legacy Video with Embed Code",
+    "description": "Video stored in legacy embedCode format",
+    "imageUrl": null,
+    "videoUrl": null,
+    "thumbnailUrl": null,
+    "contentType": "video",
+    "embedCode": "<video controls width='100%' preload='metadata' poster='https://images.example.com/legacy-thumb.jpg'><source src='https://video.example.com/legacy.mp4' type='video/mp4'></video>",
+    "tags": ["legacy", "video", "performance"],
+    "profileId": "creator789",
+    "createdAt": "2025-09-04T16:00:00.000Z",
+    "updatedAt": "2025-09-04T16:00:00.000Z"
+  }
+]

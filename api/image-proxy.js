@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -19,7 +17,7 @@ export default async function handler(req, res) {
 
     console.log(`🖼️ Proxying image: ${imageUrl}`);
 
-    // Fetch the image from Twitter
+    // Fetch the image from Twitter using native fetch
     const response = await fetch(imageUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -32,17 +30,17 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: "Failed to fetch image" });
     }
 
+    // Get the response as an array buffer for Vercel compatibility
+    const imageBuffer = await response.arrayBuffer();
+    const imageData = Buffer.from(imageBuffer);
+
     // Set appropriate headers for image
     res.setHeader('Content-Type', response.headers.get('content-type') || 'image/jpeg');
     res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
-    
-    const contentLength = response.headers.get('content-length');
-    if (contentLength) {
-      res.setHeader('Content-Length', contentLength);
-    }
+    res.setHeader('Content-Length', imageData.length);
 
-    // Stream the image data
-    response.body.pipe(res);
+    // Send the image data
+    res.send(imageData);
 
   } catch (error) {
     console.error("Error proxying image:", error);

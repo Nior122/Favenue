@@ -23,21 +23,6 @@ export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isF
   const videos = allMedia.filter(item => (item as any).contentType === 'video');
   const mainImage = images.find(img => img.isMainImage) || images[0];
 
-  // Debug logging when modal opens
-  console.log('🔍 ProfileModal Debug:', {
-    profileName: profile.name,
-    totalMedia: allMedia.length,
-    imagesCount: images.length,
-    videosCount: videos.length,
-    contentTypes: allMedia.map(item => (item as any).contentType),
-    sampleItems: allMedia.slice(0, 3).map(item => ({
-      id: item.id,
-      contentType: (item as any).contentType,
-      hasImageUrl: !!(item as any).imageUrl,
-      hasVideoUrl: !!(item as any).videoUrl
-    }))
-  });
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

@@ -53,11 +53,11 @@ export default function DashboardPage() {
     onSuccess: (data, profileId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/favorites'] });
       queryClient.invalidateQueries({ queryKey: ['/api/profiles'] });
-      
+
       toast({
         title: data.isFavorited ? "Added to favorites" : "Removed from favorites",
-        description: data.isFavorited ? 
-          "Profile has been added to your favorites." : 
+        description: data.isFavorited ?
+          "Profile has been added to your favorites." :
           "Profile has been removed from your favorites.",
       });
     },
@@ -225,13 +225,18 @@ export default function DashboardPage() {
                       <div key={profile.id} className="group cursor-pointer">
                         <Link href={`/profile/${profile.id}`}>
                           <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                            <div className="h-32 bg-muted relative">
-                              {profile.images[0] && (
+                            <div className="aspect-square bg-muted rounded-lg overflow-hidden group relative">
+                              {(profile.profilePictureUrl || profile.images?.[0]?.imageUrl) && (
                                 <img
-                                  src={profile.images[0].imageUrl}
+                                  src={profile.profilePictureUrl || profile.images[0]?.imageUrl}
                                   alt={profile.name}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                 />
+                              )}
+                              {!profile.profilePictureUrl && !profile.images?.[0]?.imageUrl && (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                  No Image
+                                </div>
                               )}
                               <Button
                                 size="sm"

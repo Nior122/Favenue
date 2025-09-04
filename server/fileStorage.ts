@@ -53,7 +53,7 @@ export const fileStorage: IStorage = {
         email: userData.email || '',
         firstName: userData.firstName || null,
         lastName: userData.lastName || null,
-        profileImageUrl: userData.profileImageUrl || null,
+        profileImageUrl: userData.profilePictureUrl || null,
         isAdmin: userData.isAdmin || false,
         createdAt: existingIndex >= 0 ? users[existingIndex].createdAt : now,
         updatedAt: now,
@@ -76,11 +76,11 @@ export const fileStorage: IStorage = {
     }
   },
   // Profile operations
-  async getProfiles(filters?: { 
-    category?: string; 
-    location?: string; 
-    search?: string; 
-    limit?: number; 
+  async getProfiles(filters?: {
+    category?: string;
+    location?: string;
+    search?: string;
+    limit?: number;
     offset?: number;
     userId?: string;
   }): Promise<ProfileWithImages[]> {
@@ -95,14 +95,14 @@ export const fileStorage: IStorage = {
     }
 
     if (filters?.location) {
-      filteredProfiles = filteredProfiles.filter((p: any) => 
+      filteredProfiles = filteredProfiles.filter((p: any) =>
         p.location?.toLowerCase().includes(filters.location!.toLowerCase())
       );
     }
 
     if (filters?.search) {
       const searchTerm = filters.search.toLowerCase();
-      filteredProfiles = filteredProfiles.filter((p: any) => 
+      filteredProfiles = filteredProfiles.filter((p: any) =>
         p.name.toLowerCase().includes(searchTerm) ||
         p.title.toLowerCase().includes(searchTerm) ||
         (p.description && p.description.toLowerCase().includes(searchTerm))
@@ -142,13 +142,27 @@ export const fileStorage: IStorage = {
             const profileContent = await fs.readFile(profileFile, 'utf-8');
             profileData = JSON.parse(profileContent);
           } catch {
+            // Load post files to get the first image for profilePictureUrl
+            const files = await fs.readdir(profileDir).catch(() => []);
+            const postFiles = files.filter(file => file.endsWith('.json') && file !== 'profile.json');
+            const posts = await Promise.all(
+              postFiles.map(async (file) => {
+                try {
+                  const postData = await fs.readFile(path.join(profileDir, file), 'utf-8');
+                  return JSON.parse(postData);
+                } catch {
+                  return null;
+                }
+              })
+            );
+
             // Fallback to default structure if no profile.json
-            profileData = { 
+            profileData = {
               name: profileId,
               title: "Content Creator",
               category: "General",
               description: `Content from ${profileId}`,
-              profilePictureUrl: "",
+              profilePictureUrl: posts[0]?.imageUrl || "",
               coverPhotoUrl: "",
               rating: "4.5",
               reviewCount: "100",
@@ -169,11 +183,11 @@ export const fileStorage: IStorage = {
               try {
                 const postData = await fs.readFile(path.join(profileDir, file), 'utf-8');
                 const post = JSON.parse(postData);
-                
+
                 // Handle video URL and thumbnail extraction
                 let videoUrl = post.videoUrl;
                 let thumbnailUrl = post.thumbnailUrl;
-                
+
                 // Extract from embedCode if video fields are missing
                 if (!videoUrl && post.embedCode && post.contentType === 'video') {
                   const srcMatch = post.embedCode.match(/src='([^']+)'/);
@@ -181,7 +195,7 @@ export const fileStorage: IStorage = {
                   if (srcMatch) videoUrl = srcMatch[1];
                   if (posterMatch) thumbnailUrl = posterMatch[1];
                 }
-                
+
                 return {
                   id: file.replace('.json', ''),
                   profileId: profileId,
@@ -292,14 +306,14 @@ export const fileStorage: IStorage = {
   async clearProfilePosts(profileId: string): Promise<void> {
     try {
       const postDir = path.join(process.cwd(), 'data', profileId);
-      
+
       // Read directory and delete all post files
       try {
         const files = await fs.readdir(postDir);
         const postFiles = files.filter(file => file.startsWith('post-') && file.endsWith('.json'));
-        
+
         console.log(`🗑️ Clearing ${postFiles.length} existing posts for profile: ${profileId}`);
-        
+
         for (const file of postFiles) {
           await fs.unlink(path.join(postDir, file));
         }

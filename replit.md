@@ -1,80 +1,74 @@
-# replit.md
+# CreatorHub - Replit Project Documentation
 
 ## Overview
+CreatorHub is a full-stack web application designed as an adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories.
 
-CreatorHub is a full-stack web application redesigned as an adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories. The application features a dark-themed React frontend with adult content platform styling, Node.js/Express backend, PostgreSQL database integration via Drizzle ORM, and Replit authentication for user management.
+**Current State**: Successfully imported and running in Replit environment
 
-**Latest Update (September 6, 2025)**: **PROJECT SUCCESSFULLY IMPORTED TO REPLIT**: Fresh GitHub import successfully configured and running in Replit environment. Application now serves 29 creator profiles with video and image content. Express server configured with proper host settings for Replit proxy. File-based storage working correctly, loading data from JSON files. All dependencies installed and workflows properly configured for development and deployment.
+## Tech Stack
+- **Frontend**: React 18 with TypeScript, Vite, shadcn/ui, Tailwind CSS
+- **Backend**: Node.js with Express.js, TypeScript
+- **Storage**: File-based storage system (no database needed)
+- **Development**: tsx for TypeScript execution
+- **Styling**: Dark-themed UI with Tailwind CSS and shadcn components
 
-**Deployment Status**: **FIXED Vercel Build Issues**: Created comprehensive PR to resolve database-related build failures. Separated DB operations from build process with GitHub Actions CI/CD pipeline. Updated Vercel configuration to only run build commands. Created complete deployment documentation with step-by-step setup guides. Database seeding and migrations now handled via automated CI/CD workflow. Vercel builds will succeed with proper environment variable configuration.
+## Project Architecture
+```
+├── client/src/          # React frontend
+│   ├── components/      # UI components including shadcn/ui
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utility libraries and query client
+│   ├── pages/          # Application pages
+│   └── App.tsx         # Main application component
+├── server/              # Express backend
+│   ├── index.ts        # Main server entry point
+│   ├── routes.ts       # API route definitions
+│   ├── storage.ts      # File-based storage interface
+│   ├── vite.ts         # Vite development server setup
+│   └── ...            # Additional server modules
+├── shared/              # Shared types and schemas
+│   └── schema.ts       # Data models and validation
+├── data/               # Content creator profiles and posts
+└── attached_assets/    # Static assets
+```
+
+## Recent Changes (Import Setup)
+- **Fixed tsx command**: Resolved development server startup issue
+- **Configured Vite for Replit**: Set `allowedHosts: true` for proxy compatibility
+- **Set up workflow**: Configured frontend to run on port 5000 with webview output
+- **Deployment configuration**: Set up for autoscale deployment target
+
+## Current Features
+- Dark-themed React frontend with adult content platform styling
+- File-based storage system loading creator profiles from data folders
+- Express API server with profile endpoints
+- Video content processing and thumbnail extraction
+- Responsive design with shadcn/ui components
+- Real-time development with Vite HMR
+
+## Development Workflow
+```bash
+# Start development server (via workflow)
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+```
+
+## Configuration Notes
+- **Port**: Application runs on port 5000 (required for Replit)
+- **Host**: Configured for 0.0.0.0 to work with Replit's proxy
+- **Storage**: Uses file-based storage, loads profiles from `data/` folder
+- **Environment**: NODE_ENV=development for dev mode, production for build
 
 ## User Preferences
+- No specific preferences documented yet
 
-Preferred communication style: Simple, everyday language.
-
-## System Architecture
-
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript using Vite as the build tool
-- **UI Library**: shadcn/ui components built on top of Radix UI primitives
-- **Styling**: Tailwind CSS with custom design tokens and CSS variables
-- **State Management**: TanStack Query for server state management and caching
-- **Routing**: Wouter for lightweight client-side routing
-- **Form Handling**: React Hook Form with Zod validation
-
-### Backend Architecture
-- **Runtime**: Node.js with Express.js framework
-- **Language**: TypeScript with ES modules
-- **API Pattern**: RESTful API design with structured route handling
-- **Error Handling**: Centralized error middleware with proper HTTP status codes
-- **Session Management**: Express sessions with PostgreSQL storage using connect-pg-simple
-
-### Content Management System
-- **Storage**: File-based JSON storage in `/data` directory
-- **No Database**: Removed PostgreSQL completely - no hosting costs
-- **GitHub Workflow**: Content managed by editing JSON files in repository
-- **Key Files**:
-  - `data/[profileId]/profile.json`: Individual profile data
-  - `data/[profileId]/post-*.json`: Individual post JSON files per profile
-  - **Structure**: Each post has title, description, imageUrl, tags, and metadata
-- **Deployment**: Static files deploy automatically with Vercel
-- **API Endpoints**: Both local and Vercel deployment support `/api/profiles` and `/api/profiles/[id]`
-
-### Content Management
-- **File-Based**: All content stored in JSON files committed to GitHub
-- **Manual Upload**: Posts added by creating JSON files in `data/posts/[profileId]/` directory
-- **No Authentication**: Simplified for static deployment (no user accounts needed)
-- **GitHub Workflow**: Edit files → Commit → Automatic Vercel deployment
-- **Scripts**: Helper scripts for local development (`scripts/add-post.js`, `scripts/add-profile.js`)
-- **Version Control**: Full content history tracked in Git
-
-### File Structure
-- **Monorepo Layout**: Organized into `client/`, `server/`, and `shared/` directories
-- **Shared Types**: Common schemas and TypeScript definitions in `shared/`
-- **Client Code**: React application in `client/src/` with component organization
-- **Server Code**: Express application in `server/` with modular route handling
-
-### Build & Deployment
-- **Development**: Hot module replacement with Vite dev server
-- **Production**: Static asset building with server-side rendering support
-- **Environment**: Environment-based configuration with proper secret management
-
-## External Dependencies
-
-### Database & Storage
-- **Neon Database**: Serverless PostgreSQL hosting with connection pooling
-- **Drizzle Kit**: Database migration and schema management tools
-
-### Authentication
-- **Replit Identity**: OIDC-based authentication system
-- **OpenID Client**: Standards-compliant authentication flow implementation
-
-### UI & Styling
-- **Radix UI**: Accessible component primitives for complex UI elements
-- **Tailwind CSS**: Utility-first CSS framework with custom design system
-- **Lucide React**: Consistent icon library for UI elements
-
-### Development Tools
-- **TypeScript**: Static type checking across the entire application
-- **ESBuild**: Fast JavaScript bundler for production builds
-- **PostCSS**: CSS processing with Tailwind integration
+## Deployment Status
+- **Target**: Autoscale (configured)
+- **Build Command**: npm run build
+- **Start Command**: npm run start
+- **Ready for deployment**: Yes

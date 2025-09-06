@@ -1,26 +1,17 @@
+
 {
-  "id": "eboniespublicness",
   "name": "Ebonies Publicness's",
-  "title": "Exclusive Content Creator",
-  "category": "Premium Content",
+  "title": "Public Adventure Content Creator",
+  "category": "Public Content",
   "location": "United States",
-  "description": "Premium exclusive content creator bringing you authentic and captivating experiences. Join me for intimate moments and exclusive content you won't find anywhere else.",
-  "profilePictureUrl": "https://pbs.twimg.com/media/GrvKDbgXsAA-bQh.jpg:small",
-  "coverPhotoUrl": "https://pbs.twimg.com/amplify_video_thumb/1943422306900152322/img/O8tx5DgizsIPR1vo.jpg:small",
-  "rating": "4.8",
-  "reviewCount": "1247",
-  "likesCount": "15823",
+  "description": "Bold and adventurous content creator specializing in public escapades and thrilling outdoor experiences. Always pushing boundaries with creative and daring content.",
+  "profilePictureUrl": "https://pbs.twimg.com/media/Gy-4PabboAA_a90.jpg:large",
+  "coverPhotoUrl": "https://video.twimg.com/amplify_video/1958987542554165248/vid/avc1/720x1280/KqthbZ48-Nbo1xpF.mp4?tag=21",
+  "rating": "4.7",
+  "reviewCount": "892",
+  "likesCount": "15420",
   "viewsCount": "89634",
   "subscribersCount": "2156",
-  "tags": [
-    "Premium",
-    "Exclusive",
-    "Authentic",
-    "Content Creator",
-    "Intimate"
-  ],
-  "isActive": true,
-  "mediaCount": "146",
-  "createdAt": "2025-09-02T21:42:00Z",
-  "updatedAt": "2025-09-02T22:23:16.236Z"
+  "tags": ["Public", "Adventure", "Outdoor", "Bold", "Exclusive"],
+  "isActive": true
 }

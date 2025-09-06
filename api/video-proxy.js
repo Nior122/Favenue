@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       'Sec-Fetch-Site': 'cross-site',
     };
 
-    // Add range header if present
+    // Add range header if present for video seeking
     if (range) {
       requestHeaders['Range'] = range;
     }
@@ -59,37 +59,47 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Range, Content-Length, Content-Type');
     
     // Set video headers
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'video/mp4');
+    const contentType = response.headers.get('content-type') || 'video/mp4';
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Cache-Control', 'public, max-age=3600');
 
-    // Copy response headers from Twitter
-    if (response.headers.get('content-length')) {
-      res.setHeader('Content-Length', response.headers.get('content-length'));
+    // Copy essential headers from Twitter's response
+    const contentLength = response.headers.get('content-length');
+    const contentRange = response.headers.get('content-range');
+    
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
     }
-    if (response.headers.get('content-range')) {
-      res.setHeader('Content-Range', response.headers.get('content-range'));
+    if (contentRange) {
+      res.setHeader('Content-Range', contentRange);
     }
 
-    // Handle partial content responses for range requests
+    // Handle partial content responses (206) for range requests
     if (response.status === 206) {
       res.status(206);
     }
 
-    // Stream the video directly without buffering
-    const reader = response.body.getReader();
+    // For Vercel compatibility, convert response to buffer and send
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(Buffer.from(value));
-      }
-      res.end();
-    } catch (streamError) {
-      console.error('Streaming error:', streamError);
-      res.end();
+    // Handle client-side range requests if server didn't handle them
+    if (range && response.status !== 206 && buffer.length > 0) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
+      const chunkSize = (end - start) + 1;
+      
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${buffer.length}`);
+      res.setHeader('Content-Length', chunkSize);
+      res.status(206);
+      
+      return res.end(buffer.slice(start, end + 1));
     }
+
+    // Send the complete video buffer
+    res.end(buffer);
 
   } catch (error) {
     console.error("Error proxying video:", error);

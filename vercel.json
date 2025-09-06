@@ -11,9 +11,20 @@
     },
     {
       "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
     }
   ],
+  "functions": {
+    "api/video-proxy.js": {
+      "maxDuration": 30
+    },
+    "api/image-proxy.js": {
+      "maxDuration": 15
+    }
+  },
   "routes": [
     {
       "src": "/api/profiles",

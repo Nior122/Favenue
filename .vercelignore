@@ -1,0 +1,39 @@
+# Exclude large data directory from Vercel deployment
+data/
+
+# Exclude development files
+.cache/
+.replit
+replit.nix
+replit.md
+
+# Exclude build artifacts that will be regenerated
+dist/
+node_modules/
+
+# Exclude documentation
+*.md
+!README.md
+
+# Exclude development configs
+.env.local
+.env.development
+
+# Exclude git files
+.git/
+.gitignore
+
+# Exclude scripts not needed in production  
+scripts/
+build.js
+verify-build.js
+
+# Exclude test files
+**/*.test.*
+**/__tests__/
+
+# Exclude local development files
+local-build.log
+*_report.json
+git-branch-info.txt
+vercel_build_log_*.txt

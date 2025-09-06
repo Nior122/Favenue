@@ -4,7 +4,15 @@ import path from 'path';
 
 async function getProfile(id) {
   try {
-    const profileDir = path.join(process.cwd(), 'data', id);
+    const dataDir = path.join(process.cwd(), 'data');
+    
+    // Check if data directory exists (won't exist on Vercel due to .vercelignore)
+    if (!fs.existsSync(dataDir)) {
+      console.log('⚠️ Data directory not found, returning demo profile for Vercel deployment');
+      return getDemoProfile(id);
+    }
+    
+    const profileDir = path.join(dataDir, id);
     
     // Check if profile directory exists
     if (!fs.existsSync(profileDir)) {
@@ -93,6 +101,61 @@ async function getProfilePosts(profileId) {
     console.error(`Error reading posts for profile ${profileId}:`, error);
     return [];
   }
+}
+
+// Demo profile for Vercel deployment when data directory is not available  
+function getDemoProfile(id) {
+  return {
+    id: id,
+    name: `Demo Creator ${id}`,
+    title: "Content Creator", 
+    category: "Demo",
+    description: `This is a demo profile for ${id} - Vercel deployment`,
+    profilePictureUrl: "https://via.placeholder.com/300x400",
+    coverPhotoUrl: "https://via.placeholder.com/800x400",
+    rating: "4.5",
+    reviewCount: "100",
+    likesCount: "1000",
+    viewsCount: "10000",
+    subscribersCount: "500",
+    tags: ["Demo", "Sample"],
+    isActive: true,
+    mediaCount: "3",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    images: [
+      {
+        id: `demo-${id}-1`,
+        profileId: id,
+        imageUrl: "https://via.placeholder.com/400x600",
+        title: "Demo Image 1",
+        description: "Demo content",
+        isMainImage: true,
+        order: "1",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: `demo-${id}-2`,
+        profileId: id,
+        imageUrl: "https://via.placeholder.com/400x600", 
+        title: "Demo Image 2",
+        description: "Demo content",
+        isMainImage: false,
+        order: "2",
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: `demo-${id}-3`,
+        profileId: id,
+        imageUrl: "https://via.placeholder.com/400x600",
+        title: "Demo Image 3", 
+        description: "Demo content",
+        isMainImage: false,
+        order: "3",
+        createdAt: new Date().toISOString()
+      }
+    ]
+  };
 }
 
 export default async function handler(req, res) {

@@ -1,0 +1,24 @@
+GIT REPOSITORY INFORMATION
+
+Repository: Nior122/Favenue
+Current Branch: main  
+Remote URL: https://github.com/Nior122/Favenue
+
+Branches:
+* main (current)
+  replit-agent
+  remotes/origin/main
+
+Note: Git operations were restricted in this environment.
+All fixes were applied to the working directory and need to be committed/pushed by the user.
+
+Files Modified for Vercel Deployment Fixes:
+1. package.json - Added Node.js version requirement (>=18.0.0)
+2. vite.config.ts - Added bundle optimization with code splitting
+3. client/src/index.css - Fixed CSS syntax errors and orphaned properties
+4. Updated browserslist database to latest version
+
+Recommended git commands for the user:
+git add .
+git commit -m "Fix Vercel deployment issues: add Node version, optimize bundles, fix CSS"
+git push origin main

@@ -211,6 +211,8 @@
     background: hsl(var(--card) / 0.8);
     border: 1px solid hsl(var(--border) / 0.5);
   }
+  
+  .glass-effect:hover {
     border-color: hsl(var(--primary));
     transform: translateY(-4px);
     box-shadow: 0 8px 25px hsl(var(--primary) / 0.15);
@@ -281,3 +283,4 @@
     background: hsl(var(--card) / 0.8);
     border: 1px solid hsl(var(--border) / 0.5);
   }
+}

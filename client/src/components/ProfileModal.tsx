@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Heart, Star, MapPin, Calendar, Shield, Eye, Users, Image, Video } from "lucide-react";
 import { ProfileWithImages } from "@shared/schema";
 import MediaPlayer from "./MediaPlayer";
+import MediaRenderer from "./MediaRenderer";
 
 interface ProfileModalProps {
   profile: ProfileWithImages | null;
@@ -103,11 +104,13 @@ export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isF
                   <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                     {videos.map((video, index) => (
                       <div key={video.id} className="relative group cursor-pointer">
-                        <MediaPlayer
-                          src={(video as any).videoUrl || ''}
-                          poster={(video as any).thumbnailUrl || ''}
-                          contentType="video"
-                          alt={`${profile.name} video ${index + 1}`}
+                        <MediaRenderer
+                          item={{
+                            contentType: 'video',
+                            videoUrl: (video as any).videoUrl || '',
+                            thumbnailUrl: (video as any).thumbnailUrl || '',
+                            title: (video as any).title || `${profile.name} video ${index + 1}`
+                          }}
                           className="w-full h-20 rounded"
                           controls={true}
                           muted={true}

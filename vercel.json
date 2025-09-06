@@ -47,6 +47,10 @@
       "dest": "/api/image-proxy.js"
     },
     {
+      "src": "/api/probe",
+      "dest": "/api/probe.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1.js"
     },

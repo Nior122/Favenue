@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { ProfileImage } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import MediaPlayer from "@/components/MediaPlayer";
+import MediaRenderer from "@/components/MediaRenderer";
 
 interface MediaGalleryProps {
   images: ProfileImage[];
@@ -46,11 +47,13 @@ export default function ImageGallery({ images }: MediaGalleryProps) {
             data-testid={`gallery-image-${index}`}
           >
             {(image as any).contentType === 'video' && (image as any).videoUrl && (image as any).videoUrl.trim() !== '' ? (
-              <MediaPlayer
-                src={(image as any).videoUrl}
-                poster={(image as any).thumbnailUrl}
-                contentType="video"
-                alt={(image as any).description || (image as any).title || `Portfolio Item ${index + 1}`}
+              <MediaRenderer
+                item={{
+                  contentType: 'video',
+                  videoUrl: (image as any).videoUrl,
+                  thumbnailUrl: (image as any).thumbnailUrl,
+                  title: (image as any).description || (image as any).title || `Portfolio Item ${index + 1}`
+                }}
                 className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
                 controls={false}
                 muted={true}
@@ -123,11 +126,13 @@ export default function ImageGallery({ images }: MediaGalleryProps) {
           )}
 
           {(images[currentImageIndex] as any)?.contentType === 'video' ? (
-            <MediaPlayer
-              src={(images[currentImageIndex] as any)?.videoUrl}
-              poster={(images[currentImageIndex] as any)?.thumbnailUrl}
-              contentType="video"
-              alt={(images[currentImageIndex] as any)?.description || (images[currentImageIndex] as any)?.title || `Portfolio Item ${currentImageIndex + 1}`}
+            <MediaRenderer
+              item={{
+                contentType: 'video',
+                videoUrl: (images[currentImageIndex] as any)?.videoUrl,
+                thumbnailUrl: (images[currentImageIndex] as any)?.thumbnailUrl,
+                title: (images[currentImageIndex] as any)?.description || (images[currentImageIndex] as any)?.title || `Portfolio Item ${currentImageIndex + 1}`
+              }}
               className="max-w-full max-h-full object-contain"
               controls={true}
               onClick={(e) => e.stopPropagation()}

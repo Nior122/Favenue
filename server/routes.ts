@@ -52,6 +52,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Video proxy endpoint to handle CORS issues with Twitter videos
+  app.options("/api/video-proxy", (req, res) => {
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Range, Content-Range, Content-Length, Content-Type',
+    });
+    res.status(204).send();
+  });
+
   app.get("/api/video-proxy", async (req, res) => {
     try {
       const videoUrl = req.query.url as string;
@@ -67,6 +76,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`🎥 Proxying video: ${videoUrl}`);
 
+      // Handle range requests for video seeking
+      const range = req.headers.range;
+      
       // Fetch the video from Twitter
       const response = await axios({
         method: 'GET',
@@ -75,16 +87,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           'Referer': 'https://twitter.com/',
+          ...(range && { 'Range': range })
         }
       });
 
-      // Set appropriate headers
+      // Set CORS headers
       res.set({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Range, Content-Range, Content-Length, Content-Type',
         'Content-Type': response.headers['content-type'] || 'video/mp4',
-        'Content-Length': response.headers['content-length'],
         'Accept-Ranges': 'bytes',
         'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
       });
+
+      // Set content length if available
+      if (response.headers['content-length']) {
+        res.set('Content-Length', response.headers['content-length']);
+      }
+
+      // Handle partial content responses for range requests
+      if (response.status === 206) {
+        res.status(206);
+        if (response.headers['content-range']) {
+          res.set('Content-Range', response.headers['content-range']);
+        }
+      }
 
       // Pipe the video data to the response
       response.data.pipe(res);
@@ -92,6 +120,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error proxying video:", error);
       res.status(500).json({ error: "Failed to proxy video" });
+    }
+  });
+
+  // Image proxy endpoint to handle CORS issues with external images
+  app.options("/api/image-proxy", (req, res) => {
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Content-Length',
+    });
+    res.status(204).send();
+  });
+
+  app.get("/api/image-proxy", async (req, res) => {
+    try {
+      const imageUrl = req.query.url as string;
+      
+      if (!imageUrl) {
+        return res.status(400).json({ error: "Image URL is required" });
+      }
+
+      console.log(`🖼️ Proxying image: ${imageUrl}`);
+
+      // Fetch the image
+      const response = await axios({
+        method: 'GET',
+        url: imageUrl,
+        responseType: 'stream',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://twitter.com/',
+        }
+      });
+
+      // Set CORS and appropriate headers
+      res.set({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Content-Length',
+        'Content-Type': response.headers['content-type'] || 'image/jpeg',
+        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      });
+
+      // Set content length if available
+      if (response.headers['content-length']) {
+        res.set('Content-Length', response.headers['content-length']);
+      }
+
+      // Pipe the image data to the response
+      response.data.pipe(res);
+
+    } catch (error) {
+      console.error("Error proxying image:", error);
+      res.status(500).json({ error: "Failed to proxy image" });
     }
   });
 

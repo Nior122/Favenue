@@ -75,6 +75,7 @@ export default function MediaPlayer({
           className="w-full h-full object-cover"
           onError={handleImageError}
           onLoad={handleImageLoad}
+          crossOrigin="anonymous"
         />
         {imageError && (
           <div className="absolute inset-0 w-full h-full bg-gray-800 flex items-center justify-center">
@@ -117,6 +118,7 @@ export default function MediaPlayer({
         onError={handleVideoError}
         onLoadedData={handleVideoLoad}
         onCanPlay={() => console.log('Video can play:', videoSource)}
+        crossOrigin="anonymous"
       >
         <source src={videoSource} type="video/mp4" />
         Your browser does not support the video tag.

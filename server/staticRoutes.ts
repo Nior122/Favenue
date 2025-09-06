@@ -113,6 +113,7 @@ export function registerRoutes(app: Express): Server {
       response.data.pipe(res);
 
     } catch (error: any) {
+      const videoUrl = req.query.url as string;
       console.error("❌ Error proxying video:", {
         videoUrl: videoUrl,
         error: error?.message,

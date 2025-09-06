@@ -61,65 +61,35 @@ export default async function handler(req, res) {
     // Set video headers
     res.setHeader('Content-Type', response.headers.get('content-type') || 'video/mp4');
     res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+
+    // Copy response headers from Twitter
+    if (response.headers.get('content-length')) {
+      res.setHeader('Content-Length', response.headers.get('content-length'));
+    }
+    if (response.headers.get('content-range')) {
+      res.setHeader('Content-Range', response.headers.get('content-range'));
+    }
 
     // Handle partial content responses for range requests
     if (response.status === 206) {
       res.status(206);
-      if (response.headers.get('content-range')) {
-        res.setHeader('Content-Range', response.headers.get('content-range'));
-      }
-      if (response.headers.get('content-length')) {
-        res.setHeader('Content-Length', response.headers.get('content-length'));
-      }
-    } else {
-      // For non-range requests, set content length
-      if (response.headers.get('content-length')) {
-        res.setHeader('Content-Length', response.headers.get('content-length'));
-      }
     }
 
-    // Stream the video data to the response
+    // Stream the video directly without buffering
     const reader = response.body.getReader();
     
-    // Handle streaming
-    const stream = new ReadableStream({
-      start(controller) {
-        function pump() {
-          return reader.read().then(({ done, value }) => {
-            if (done) {
-              controller.close();
-              return;
-            }
-            controller.enqueue(value);
-            return pump();
-          });
-        }
-        return pump();
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(Buffer.from(value));
       }
-    });
-
-    // For Vercel, we need to convert the stream to buffer
-    const videoBuffer = await response.arrayBuffer();
-    const videoData = Buffer.from(videoBuffer);
-
-    // Handle range requests properly
-    if (range && response.status !== 206) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : videoData.length - 1;
-      const chunksize = (end - start) + 1;
-      
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${videoData.length}`);
-      res.setHeader('Content-Length', chunksize);
-      res.status(206);
-      
-      // Send the requested chunk
-      return res.send(videoData.slice(start, end + 1));
+      res.end();
+    } catch (streamError) {
+      console.error('Streaming error:', streamError);
+      res.end();
     }
-
-    // Send the complete video
-    res.send(videoData);
 
   } catch (error) {
     console.error("Error proxying video:", error);

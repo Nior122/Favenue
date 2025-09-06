@@ -13,7 +13,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
-  const [nextShuffleIn, setNextShuffleIn] = useState(30);
+  const [nextShuffleIn, setNextShuffleIn] = useState(120);
   const itemsPerPage = 50;
 
   const { data: allProfiles = [], isLoading, error } = useQuery<ProfileWithImages[]>({
@@ -67,8 +67,8 @@ export default function Home() {
     let intervalId: NodeJS.Timeout;
 
     if (allProfiles.length > 0) {
-      // Reset countdown to 30
-      setNextShuffleIn(30);
+      // Reset countdown to 120 (2 minutes)
+      setNextShuffleIn(120);
       
       // Combined timer that counts down and triggers shuffle
       intervalId = setInterval(() => {
@@ -76,8 +76,8 @@ export default function Home() {
           if (prev <= 1) {
             // Trigger shuffle when countdown reaches 0
             setShuffleTrigger(Date.now());
-            console.log('⏰ Auto-shuffle triggered (30 seconds)');
-            return 30; // Reset to 30 for next cycle
+            console.log('⏰ Auto-shuffle triggered (2 minutes)');
+            return 120; // Reset to 120 for next cycle
           }
           return prev - 1;
         });

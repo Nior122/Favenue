@@ -46,25 +46,18 @@ export default function ImageGallery({ images }: MediaGalleryProps) {
             onClick={() => openLightbox(index)}
             data-testid={`gallery-image-${index}`}
           >
-            {(image as any).contentType === 'video' && (image as any).videoUrl && (image as any).videoUrl.trim() !== '' ? (
-              <MediaRenderer
-                item={{
-                  contentType: 'video',
-                  videoUrl: (image as any).videoUrl,
-                  thumbnailUrl: (image as any).thumbnailUrl,
-                  title: (image as any).description || (image as any).title || `Portfolio Item ${index + 1}`
-                }}
-                className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
-                controls={false}
-                muted={true}
-              />
-            ) : (
-              <img
-                src={(image as any).imageUrl || (image as any).videoUrl}
-                alt={(image as any).description || (image as any).title || `Portfolio Item ${index + 1}`}
-                className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
-              />
-            )}
+            <MediaRenderer
+              item={{
+                contentType: (image as any).contentType || 'image',
+                videoUrl: (image as any).videoUrl,
+                imageUrl: (image as any).imageUrl,
+                thumbnailUrl: (image as any).thumbnailUrl,
+                title: (image as any).description || (image as any).title || `Portfolio Item ${index + 1}`
+              }}
+              className="w-full aspect-video object-cover transition-transform group-hover:scale-105"
+              controls={false}
+              muted={true}
+            />
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <div className="bg-white/90 rounded-full p-2">
                 <svg className="w-6 h-6 text-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">

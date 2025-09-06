@@ -11,6 +11,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Set a timeout for serverless environments
+  const isProduction = process.env.NODE_ENV === 'production';
+  const timeoutMs = isProduction ? 8000 : 15000; // Shorter timeout in production
+
   try {
     const videoUrl = req.query.url;
     
@@ -43,15 +47,31 @@ export default async function handler(req, res) {
       requestHeaders['Range'] = range;
     }
 
-    // Fetch the video from Twitter
-    const response = await fetch(videoUrl, {
-      headers: requestHeaders
-    });
+    // Create a timeout controller for production resilience
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log(`⏰ Video proxy timeout after ${timeoutMs}ms for: ${videoUrl}`);
+      controller.abort();
+    }, timeoutMs);
 
-    if (!response.ok) {
-      console.error(`Failed to fetch video: ${response.status} ${response.statusText}`);
-      return res.status(response.status).json({ error: "Failed to fetch video" });
-    }
+    try {
+      // Fetch the video from Twitter with timeout
+      const response = await fetch(videoUrl, {
+        headers: requestHeaders,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.error(`❌ Failed to fetch video: ${response.status} ${response.statusText} for URL: ${videoUrl}`);
+        return res.status(response.status).json({ 
+          error: "Failed to fetch video", 
+          status: response.status,
+          statusText: response.statusText,
+          url: videoUrl.substring(0, 100) + '...' 
+        });
+      }
 
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -80,29 +100,56 @@ export default async function handler(req, res) {
       res.status(206);
     }
 
-    // For Vercel compatibility, convert response to buffer and send
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+      // For Vercel compatibility, convert response to buffer and send
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      console.log(`✅ Video proxy successful: ${buffer.length} bytes for ${videoUrl}`);
     
-    // Handle client-side range requests if server didn't handle them
-    if (range && response.status !== 206 && buffer.length > 0) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
-      const chunkSize = (end - start) + 1;
+      // Handle client-side range requests if server didn't handle them
+      if (range && response.status !== 206 && buffer.length > 0) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
+        const chunkSize = (end - start) + 1;
+        
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${buffer.length}`);
+        res.setHeader('Content-Length', chunkSize);
+        res.status(206);
+        
+        return res.end(buffer.slice(start, end + 1));
+      }
+
+      // Send the complete video buffer
+      res.end(buffer);
       
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${buffer.length}`);
-      res.setHeader('Content-Length', chunkSize);
-      res.status(206);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
       
-      return res.end(buffer.slice(start, end + 1));
+      if (fetchError.name === 'AbortError') {
+        console.error(`⏰ Video proxy timeout: ${videoUrl}`);
+        return res.status(408).json({ 
+          error: "Video proxy timeout", 
+          timeout: timeoutMs,
+          url: videoUrl.substring(0, 100) + '...' 
+        });
+      }
+      
+      console.error(`❌ Video proxy fetch error:`, fetchError);
+      return res.status(502).json({ 
+        error: "Video proxy fetch failed", 
+        details: fetchError.message,
+        url: videoUrl.substring(0, 100) + '...' 
+      });
     }
 
-    // Send the complete video buffer
-    res.end(buffer);
-
   } catch (error) {
-    console.error("Error proxying video:", error);
-    res.status(500).json({ error: "Failed to proxy video", details: error.message });
+    console.error(`❌ Video proxy error for ${videoUrl}:`, error);
+    res.status(500).json({ 
+      error: "Failed to proxy video", 
+      details: error.message,
+      url: videoUrl?.substring(0, 100) + '...',
+      timestamp: new Date().toISOString()
+    });
   }
 }

@@ -117,9 +117,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Pipe the video data to the response
       response.data.pipe(res);
 
-    } catch (error) {
-      console.error("Error proxying video:", error);
-      res.status(500).json({ error: "Failed to proxy video" });
+    } catch (error: any) {
+      console.error("❌ Error proxying video:", {
+        videoUrl: videoUrl,
+        error: error?.message,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        headers: error?.response?.headers,
+        stack: error?.stack
+      });
+      res.status(500).json({ 
+        error: "Failed to proxy video", 
+        details: error?.message || 'Unknown error',
+        videoUrl: videoUrl 
+      });
     }
   });
 
@@ -171,9 +182,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Pipe the image data to the response
       response.data.pipe(res);
 
-    } catch (error) {
-      console.error("Error proxying image:", error);
-      res.status(500).json({ error: "Failed to proxy image" });
+    } catch (error: any) {
+      console.error("❌ Error proxying image:", {
+        imageUrl: imageUrl,
+        error: error?.message,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        headers: error?.response?.headers,
+        stack: error?.stack
+      });
+      res.status(500).json({ 
+        error: "Failed to proxy image", 
+        details: error?.message || 'Unknown error',
+        imageUrl: imageUrl 
+      });
     }
   });
 

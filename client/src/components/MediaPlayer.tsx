@@ -27,8 +27,17 @@ export default function MediaPlayer({
   const [imageError, setImageError] = useState(false);
   const [videoError, setVideoError] = useState(false);
 
-  const handleImageError = () => {
-    console.log('Image failed to load:', src);
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const img = e.currentTarget;
+    console.error('❌ Image error details:', {
+      src: img.src,
+      alt: img.alt,
+      naturalWidth: img.naturalWidth,
+      naturalHeight: img.naturalHeight,
+      complete: img.complete,
+      originalSrc: src,
+      event: e.type
+    });
     setImageError(true);
   };
 
@@ -37,7 +46,19 @@ export default function MediaPlayer({
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    console.error('Video failed to load:', { src, poster, error: e });
+    const video = e.currentTarget;
+    console.error('❌ Video error details:', {
+      src: video.src,
+      poster: video.poster,
+      networkState: video.networkState,
+      readyState: video.readyState,
+      error: video.error ? {
+        code: video.error.code,
+        message: video.error.message
+      } : null,
+      originalSrc: src,
+      event: e.type
+    });
     setVideoError(true);
   };
 
@@ -75,7 +96,6 @@ export default function MediaPlayer({
           className="w-full h-full object-cover"
           onError={handleImageError}
           onLoad={handleImageLoad}
-          crossOrigin="anonymous"
         />
         {imageError && (
           <div className="absolute inset-0 w-full h-full bg-gray-800 flex items-center justify-center">
@@ -118,7 +138,6 @@ export default function MediaPlayer({
         onError={handleVideoError}
         onLoadedData={handleVideoLoad}
         onCanPlay={() => console.log('Video can play:', videoSource)}
-        crossOrigin="anonymous"
       >
         <source src={videoSource} type="video/mp4" />
         Your browser does not support the video tag.

@@ -1,4 +1,12 @@
 export default async function handler(req, res) {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Length');
+    return res.status(204).end();
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -34,6 +42,11 @@ export default async function handler(req, res) {
     const imageBuffer = await response.arrayBuffer();
     const imageData = Buffer.from(imageBuffer);
 
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Length');
+    
     // Set appropriate headers for image
     res.setHeader('Content-Type', response.headers.get('content-type') || 'image/jpeg');
     res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
@@ -44,6 +57,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Error proxying image:", error);
-    res.status(500).json({ error: "Failed to proxy image" });
+    res.status(500).json({ error: "Failed to proxy image", details: error.message });
   }
 }

@@ -1,4 +1,12 @@
 export default async function handler(req, res) {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Range, Content-Length, Content-Type');
+    return res.status(204).end();
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -17,12 +25,27 @@ export default async function handler(req, res) {
 
     console.log(`🎥 Proxying video: ${videoUrl}`);
 
-    // Fetch the video from Twitter using native fetch
+    // Handle range requests for video seeking
+    const range = req.headers.range;
+    const requestHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      'Referer': 'https://twitter.com/',
+      'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'identity',
+      'Sec-Fetch-Dest': 'video',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'cross-site',
+    };
+
+    // Add range header if present
+    if (range) {
+      requestHeaders['Range'] = range;
+    }
+
+    // Fetch the video from Twitter
     const response = await fetch(videoUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Referer': 'https://twitter.com/',
-      }
+      headers: requestHeaders
     });
 
     if (!response.ok) {
@@ -30,19 +53,58 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: "Failed to fetch video" });
     }
 
-    // Get the response as an array buffer for Vercel compatibility
-    const videoBuffer = await response.arrayBuffer();
-    const videoData = Buffer.from(videoBuffer);
-
-    // Set appropriate headers for video streaming
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Range, Content-Length, Content-Type');
+    
+    // Set video headers
     res.setHeader('Content-Type', response.headers.get('content-type') || 'video/mp4');
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-    res.setHeader('Content-Length', videoData.length);
 
-    // Handle range requests for video seeking
-    const range = req.headers.range;
-    if (range) {
+    // Handle partial content responses for range requests
+    if (response.status === 206) {
+      res.status(206);
+      if (response.headers.get('content-range')) {
+        res.setHeader('Content-Range', response.headers.get('content-range'));
+      }
+      if (response.headers.get('content-length')) {
+        res.setHeader('Content-Length', response.headers.get('content-length'));
+      }
+    } else {
+      // For non-range requests, set content length
+      if (response.headers.get('content-length')) {
+        res.setHeader('Content-Length', response.headers.get('content-length'));
+      }
+    }
+
+    // Stream the video data to the response
+    const reader = response.body.getReader();
+    
+    // Handle streaming
+    const stream = new ReadableStream({
+      start(controller) {
+        function pump() {
+          return reader.read().then(({ done, value }) => {
+            if (done) {
+              controller.close();
+              return;
+            }
+            controller.enqueue(value);
+            return pump();
+          });
+        }
+        return pump();
+      }
+    });
+
+    // For Vercel, we need to convert the stream to buffer
+    const videoBuffer = await response.arrayBuffer();
+    const videoData = Buffer.from(videoBuffer);
+
+    // Handle range requests properly
+    if (range && response.status !== 206) {
       const parts = range.replace(/bytes=/, "").split("-");
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : videoData.length - 1;
@@ -61,6 +123,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Error proxying video:", error);
-    res.status(500).json({ error: "Failed to proxy video" });
+    res.status(500).json({ error: "Failed to proxy video", details: error.message });
   }
 }

@@ -526,7 +526,7 @@ export default function ProfilePage() {
                   >
                     {/* Post Image */}
                     <div className="relative aspect-[3/4] bg-gray-800">
-                      {post.contentType === 'video' ? (
+                      {post.contentType === 'video' && post.videoUrl && post.videoUrl.trim() !== '' ? (
                         <MediaPlayer
                           src={post.videoUrl || ''}
                           poster={post.thumbnailUrl}
@@ -673,7 +673,7 @@ export default function ProfilePage() {
               <X className="w-5 h-5" />
             </Button>
             
-            {selectedPost.contentType === 'video' ? (
+            {selectedPost.contentType === 'video' && selectedPost.videoUrl && selectedPost.videoUrl.trim() !== '' ? (
               <MediaPlayer
                 src={selectedPost.videoUrl || ''}
                 poster={selectedPost.thumbnailUrl}

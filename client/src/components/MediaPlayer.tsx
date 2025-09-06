@@ -130,14 +130,21 @@ export default function MediaPlayer({
         controls={controls} 
         width="100%" 
         poster={posterSource}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover bg-black"
         muted={muted}
         autoPlay={autoPlay}
         playsInline
         preload="metadata"
+        crossOrigin="anonymous"
         onError={handleVideoError}
         onLoadedData={handleVideoLoad}
         onCanPlay={() => console.log('Video can play:', videoSource)}
+        onLoadStart={() => console.log('Video load started:', videoSource)}
+        onProgress={() => console.log('Video loading progress:', videoSource)}
+        onLoadedMetadata={() => console.log('Video metadata loaded:', videoSource)}
+        onSuspend={() => console.log('Video loading suspended:', videoSource)}
+        onStalled={() => console.log('Video loading stalled:', videoSource)}
+        style={{ minHeight: '200px' }}
       >
         <source src={videoSource} type="video/mp4" />
         Your browser does not support the video tag.

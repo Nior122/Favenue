@@ -45,7 +45,7 @@ export default function ImageGallery({ images }: MediaGalleryProps) {
             onClick={() => openLightbox(index)}
             data-testid={`gallery-image-${index}`}
           >
-            {(image as any).contentType === 'video' ? (
+            {(image as any).contentType === 'video' && (image as any).videoUrl && (image as any).videoUrl.trim() !== '' ? (
               <MediaPlayer
                 src={(image as any).videoUrl}
                 poster={(image as any).thumbnailUrl}

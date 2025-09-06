@@ -20,7 +20,11 @@ export default function ProfileModal({ profile, isOpen, onClose, onFavorite, isF
   // Separate images and videos based on contentType
   const allMedia = profile.images || [];
   const images = allMedia.filter(item => (item as any).contentType !== 'video');
-  const videos = allMedia.filter(item => (item as any).contentType === 'video');
+  const videos = allMedia.filter(item => 
+    (item as any).contentType === 'video' && 
+    (item as any).videoUrl && 
+    (item as any).videoUrl.trim() !== ''
+  );
   const mainImage = images.find(img => img.isMainImage) || images[0];
 
 

@@ -11,45 +11,10 @@
     },
     {
       "src": "api/**/*.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 30
-      }
+      "use": "@vercel/node"
     }
   ],
-  "functions": {
-    "api/video-proxy.js": {
-      "maxDuration": 30
-    },
-    "api/image-proxy.js": {
-      "maxDuration": 15
-    }
-  },
   "routes": [
-    {
-      "src": "/api/profiles",
-      "dest": "/api/profiles.js"
-    },
-    {
-      "src": "/api/profiles/([^/]+)",
-      "dest": "/api/profiles/[id].js?id=$1"
-    },
-    {
-      "src": "/api/auth/user",
-      "dest": "/api/auth/user.js"
-    },
-    {
-      "src": "/api/video-proxy",
-      "dest": "/api/video-proxy.js"
-    },
-    {
-      "src": "/api/image-proxy",
-      "dest": "/api/image-proxy.js"
-    },
-    {
-      "src": "/api/probe",
-      "dest": "/api/probe.js"
-    },
     {
       "src": "/api/(.*)",
       "dest": "/api/$1.js"

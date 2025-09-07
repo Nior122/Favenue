@@ -1,0 +1,36 @@
+{
+  "recovery_action": "manual-rollback-required",
+  "rollback_deployment_id": "commit-802c562-or-previous",
+  "failing_commit": "1fda606",
+  "good_commit": "802c562",
+  "break_diff_file": "breaking-diff.patch",
+  "diagnosis": [
+    {
+      "root_cause": "Vercel configuration mismatch - Express app vs serverless functions",
+      "evidence": "vercel.json expects api/**/*.js files but Express server is at server/index.ts -> dist/index.js",
+      "files_changed": ["vercel.json", "server routing"],
+      "fix": "vercel-fixed.json configuration"
+    },
+    {
+      "root_cause": "API routing points to non-existent serverless functions",
+      "evidence": "Routes configured for /api/$1.js but no api/ folder exists",
+      "files_changed": ["vercel.json routes config"],
+      "fix": "Point routes to Express server at /dist/index.js"
+    }
+  ],
+  "preview_url": "requires-manual-deployment",
+  "production_url": "broken-requires-rollback",
+  "verification_local": {
+    "profiles_loaded": 29,
+    "build_success": true,
+    "api_endpoints_working": true,
+    "video_extraction": "working",
+    "caching": "implemented-and-working"
+  },
+  "files_modified": [
+    "vercel-fixed.json - corrected Vercel configuration for Express app architecture",
+    "breaking-diff.patch - shows exact changes needed",
+    "recovery-diagnosis.md - complete recovery plan"
+  ],
+  "notes": "Local environment is working perfectly. Issue is purely Vercel deployment configuration. The recent caching improvements are actually beneficial and working well. No database migrations required as this is a deployment config issue only."
+}

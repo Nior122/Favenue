@@ -12,6 +12,17 @@ if (!fsSync.existsSync(DATA_DIR)) {
   fsSync.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+// Simple in-memory cache for profiles
+let profilesCache: ProfileWithImages[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 60000; // 1 minute cache
+
+// Helper function to clear the cache
+function clearProfilesCache() {
+  profilesCache = null;
+  cacheTimestamp = 0;
+}
+
 export const fileStorage: IStorage = {
   // User operations (for authentication)
   async getUser(id: string): Promise<User | undefined> {
@@ -53,7 +64,7 @@ export const fileStorage: IStorage = {
         email: userData.email || '',
         firstName: userData.firstName || null,
         lastName: userData.lastName || null,
-        profileImageUrl: userData.profilePictureUrl || null,
+        profileImageUrl: userData.profileImageUrl || null,
         isAdmin: userData.isAdmin || false,
         createdAt: existingIndex >= 0 ? users[existingIndex].createdAt : now,
         updatedAt: now,
@@ -122,6 +133,13 @@ export const fileStorage: IStorage = {
 
   async getAllProfiles(): Promise<ProfileWithImages[]> {
     try {
+      // Check if we have a valid cache
+      const now = Date.now();
+      if (profilesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+        console.log('📚 Using cached profiles data');
+        return profilesCache;
+      }
+
       console.log('📂 Loading profiles from data folder...');
 
       // Get all profile folders
@@ -244,6 +262,11 @@ export const fileStorage: IStorage = {
 
       const profiles = result.filter(Boolean);
       console.log(`✅ Loaded ${profiles.length} profiles from data folders`);
+      
+      // Cache the results
+      profilesCache = profiles;
+      cacheTimestamp = Date.now();
+      
       return profiles;
 
     } catch (error) {
@@ -295,6 +318,7 @@ export const fileStorage: IStorage = {
       };
 
       await fs.writeFile(postFile, JSON.stringify(post, null, 2));
+      clearProfilesCache(); // Clear cache when adding posts
       return post;
     } catch (error) {
       console.error('Error adding post:', error);
@@ -306,6 +330,7 @@ export const fileStorage: IStorage = {
     try {
       const postFile = path.join(process.cwd(), 'data', profileId, `post-${postId}.json`);
       await fs.unlink(postFile);
+      clearProfilesCache(); // Clear cache when deleting posts
       return true;
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -327,6 +352,7 @@ export const fileStorage: IStorage = {
         for (const file of postFiles) {
           await fs.unlink(path.join(postDir, file));
         }
+        clearProfilesCache(); // Clear cache when clearing posts
       } catch (error) {
         // Directory might not exist, which is fine
         console.log(`📁 Profile directory doesn't exist yet: ${profileId}`);
@@ -386,6 +412,7 @@ export const fileStorage: IStorage = {
         isActive: profile.isActive
       }, null, 2));
 
+      clearProfilesCache(); // Clear cache when creating profile
       return profile;
     } catch (error) {
       console.error('Error creating profile:', error);
@@ -406,6 +433,7 @@ export const fileStorage: IStorage = {
 
       await fs.writeFile(profileFile, JSON.stringify(updatedData, null, 2));
 
+      clearProfilesCache(); // Clear cache when updating profile
       return {
         ...existing,
         ...profileData,
@@ -426,6 +454,7 @@ export const fileStorage: IStorage = {
       currentData.isActive = false;
 
       await fs.writeFile(profileFile, JSON.stringify(currentData, null, 2));
+      clearProfilesCache(); // Clear cache when deleting profile
       return true;
     } catch (error) {
       console.error('Error deleting profile:', error);

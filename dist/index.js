@@ -14,6 +14,13 @@ var DATA_DIR = path.join(process.cwd(), "data");
 if (!fsSync.existsSync(DATA_DIR)) {
   fsSync.mkdirSync(DATA_DIR, { recursive: true });
 }
+var profilesCache = null;
+var cacheTimestamp = 0;
+var CACHE_DURATION = 6e4;
+function clearProfilesCache() {
+  profilesCache = null;
+  cacheTimestamp = 0;
+}
 var fileStorage = {
   // User operations (for authentication)
   async getUser(id) {
@@ -47,7 +54,7 @@ var fileStorage = {
         email: userData.email || "",
         firstName: userData.firstName || null,
         lastName: userData.lastName || null,
-        profileImageUrl: userData.profilePictureUrl || null,
+        profileImageUrl: userData.profileImageUrl || null,
         isAdmin: userData.isAdmin || false,
         createdAt: existingIndex >= 0 ? users[existingIndex].createdAt : now,
         updatedAt: now
@@ -93,6 +100,11 @@ var fileStorage = {
   },
   async getAllProfiles() {
     try {
+      const now = Date.now();
+      if (profilesCache && now - cacheTimestamp < CACHE_DURATION) {
+        console.log("\u{1F4DA} Using cached profiles data");
+        return profilesCache;
+      }
       console.log("\u{1F4C2} Loading profiles from data folder...");
       const dataDir = path.join(process.cwd(), "data");
       const entries = await fs.readdir(dataDir, { withFileTypes: true });
@@ -195,6 +207,8 @@ var fileStorage = {
       }));
       const profiles = result.filter(Boolean);
       console.log(`\u2705 Loaded ${profiles.length} profiles from data folders`);
+      profilesCache = profiles;
+      cacheTimestamp = Date.now();
       return profiles;
     } catch (error) {
       console.error("\u274C Error loading profiles:", error);
@@ -235,6 +249,7 @@ var fileStorage = {
         createdAt: (/* @__PURE__ */ new Date()).toISOString()
       };
       await fs.writeFile(postFile, JSON.stringify(post, null, 2));
+      clearProfilesCache();
       return post;
     } catch (error) {
       console.error("Error adding post:", error);
@@ -245,6 +260,7 @@ var fileStorage = {
     try {
       const postFile = path.join(process.cwd(), "data", profileId, `post-${postId}.json`);
       await fs.unlink(postFile);
+      clearProfilesCache();
       return true;
     } catch (error) {
       console.error("Error deleting post:", error);
@@ -261,6 +277,7 @@ var fileStorage = {
         for (const file of postFiles) {
           await fs.unlink(path.join(postDir, file));
         }
+        clearProfilesCache();
       } catch (error) {
         console.log(`\u{1F4C1} Profile directory doesn't exist yet: ${profileId}`);
       }
@@ -313,6 +330,7 @@ var fileStorage = {
         tags: profile.tags,
         isActive: profile.isActive
       }, null, 2));
+      clearProfilesCache();
       return profile;
     } catch (error) {
       console.error("Error creating profile:", error);
@@ -328,6 +346,7 @@ var fileStorage = {
       const currentData = JSON.parse(await fs.readFile(profileFile, "utf-8"));
       const updatedData = { ...currentData, ...profileData };
       await fs.writeFile(profileFile, JSON.stringify(updatedData, null, 2));
+      clearProfilesCache();
       return {
         ...existing,
         ...profileData,
@@ -345,6 +364,7 @@ var fileStorage = {
       const currentData = JSON.parse(await fs.readFile(profileFile, "utf-8"));
       currentData.isActive = false;
       await fs.writeFile(profileFile, JSON.stringify(currentData, null, 2));
+      clearProfilesCache();
       return true;
     } catch (error) {
       console.error("Error deleting profile:", error);

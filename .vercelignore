@@ -1,5 +1,5 @@
-# Exclude large data directory from Vercel deployment
-data/
+# Include data directory for profile content
+# data/ - REMOVED: Data needed for profiles to display
 
 # Exclude development files
 .cache/

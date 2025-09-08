@@ -10,9 +10,11 @@ async function getProfiles() {
     // Get all profile folders from data directory
     const dataDir = path.join(process.cwd(), 'data');
     
-    // Check if data directory exists (won't exist on Vercel due to .vercelignore)
+    // Check if data directory exists
     if (!fs.existsSync(dataDir)) {
-      console.log('⚠️ Data directory not found, returning demo profiles for Vercel deployment');
+      console.log('⚠️ Data directory not found at:', dataDir);
+      console.log('📁 Current working directory:', process.cwd());
+      console.log('📂 Available files:', fs.readdirSync(process.cwd()));
       return getDemoProfiles();
     }
     

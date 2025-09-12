@@ -13,7 +13,8 @@
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs20.x",
-      "memory": 1024
+      "memory": 1024,
+      "includeFiles": "data/**"
     }
   },
   "routes": [

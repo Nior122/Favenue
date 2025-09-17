@@ -27,16 +27,27 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    sourcemap: process.env.NODE_ENV === 'development',
+    minify: process.env.NODE_ENV === 'production' ? 'terser' : false,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-select'],
-          utils: ['clsx', 'tailwind-merge', 'class-variance-authority']
-        }
+          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
+          query: ['@tanstack/react-query'],
+          motion: ['framer-motion'],
+          icons: ['lucide-react', 'react-icons']
+        },
+        // Optimize file naming for caching
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    chunkSizeWarningLimit: 600
+    chunkSizeWarningLimit: 600,
+    target: 'esnext',
+    cssCodeSplit: true
   },
   server: {
     host: "0.0.0.0",

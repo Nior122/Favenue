@@ -118,6 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       response.data.pipe(res);
 
     } catch (error: any) {
+      const videoUrl = req.query.url as string;
       console.error("❌ Error proxying video:", {
         videoUrl: videoUrl,
         error: error?.message,
@@ -183,6 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       response.data.pipe(res);
 
     } catch (error: any) {
+      const imageUrl = req.query.url as string;
       console.error("❌ Error proxying image:", {
         imageUrl: imageUrl,
         error: error?.message,

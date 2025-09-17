@@ -248,7 +248,11 @@ export class MemStorage implements IStorage {
     const image: ProfileImage = {
       id: nanoid(),
       profileId: imageData.profileId,
-      imageUrl: imageData.imageUrl,
+      imageUrl: imageData.imageUrl || null,
+      videoUrl: imageData.videoUrl || null,
+      thumbnailUrl: imageData.thumbnailUrl || null,
+      contentType: imageData.contentType || 'image',
+      embedCode: imageData.embedCode || null,
       title: imageData.title || null,
       description: imageData.description || null,
       tags: imageData.tags || null,

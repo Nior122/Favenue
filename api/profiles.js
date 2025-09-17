@@ -8,26 +8,58 @@ async function getProfiles() {
     console.log('📂 Loading profiles from data folder...');
     
     // Get all profile folders from data directory
-    const dataDir = path.join(process.cwd(), 'data');
+    let dataBaseDir = path.join(process.cwd(), 'data');
+    console.log('📁 Looking for data directory at:', dataBaseDir);
+    console.log('📂 Current working directory contents:', fs.readdirSync(process.cwd()));
     
-    // Check if data directory exists
-    if (!fs.existsSync(dataDir)) {
-      console.log('⚠️ Data directory not found at:', dataDir);
-      console.log('📁 Current working directory:', process.cwd());
-      console.log('📂 Available files:', fs.readdirSync(process.cwd()));
-      return getDemoProfiles();
+    let entries;
+    try {
+      entries = fs.readdirSync(dataBaseDir, { withFileTypes: true });
+    } catch (error) {
+      console.error('❌ Failed to read data directory:', error);
+      console.log('📂 Trying alternative data paths...');
+      // Try alternative paths for Vercel deployment
+      const altPaths = [
+        path.join(__dirname, '../data'),
+        path.join(__dirname, 'data'),
+        './data'
+      ];
+      
+      let foundPath = null;
+      for (const altPath of altPaths) {
+        try {
+          console.log('🔍 Trying path:', altPath);
+          entries = fs.readdirSync(altPath, { withFileTypes: true });
+          foundPath = altPath;
+          console.log('✅ Found data directory at:', altPath);
+          break;
+        } catch (e) {
+          console.log('❌ Path not found:', altPath);
+        }
+      }
+      
+      if (!entries) {
+        console.error('❌ Could not find data directory in any location');
+        return [];
+      }
+      
+      // Update dataBaseDir to the found path
+      if (foundPath) {
+        dataBaseDir = foundPath;
+      }
     }
     
-    const entries = fs.readdirSync(dataDir, { withFileTypes: true });
     const profileDirs = entries
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name);
+    
+    console.log(`📋 Found ${profileDirs.length} profile directories:`, profileDirs.slice(0, 5));
     
     const profiles = [];
     
     for (const profileId of profileDirs) {
       try {
-        const profileDir = path.join(dataDir, profileId);
+        const profileDir = path.join(dataBaseDir, profileId);
         
         // Load profile info
         const profileFile = path.join(profileDir, 'profile.json');
@@ -36,13 +68,14 @@ async function getProfiles() {
           const profileContent = fs.readFileSync(profileFile, 'utf-8');
           profileData = JSON.parse(profileContent);
         } catch {
-          // Fallback to default structure if no profile.json
+          // Generate fallback profile data using first post image
+          const posts = await getProfilePosts(profileId, dataBaseDir);
           profileData = { 
             name: profileId,
             title: "Content Creator",
             category: "General",
             description: `Content from ${profileId}`,
-            profilePictureUrl: "",
+            profilePictureUrl: posts[0]?.imageUrl || "",
             coverPhotoUrl: "",
             rating: "4.5",
             reviewCount: "100",
@@ -55,17 +88,43 @@ async function getProfiles() {
         }
         
         // Load posts for this profile
-        const posts = await getProfilePosts(profileId);
-        const images = posts.map((post, index) => ({
-          id: post.id || `${profileId}-${index + 1}`,
-          profileId: profileId,
-          imageUrl: post.imageUrl,
-          title: post.title || '',
-          description: post.description || '',
-          isMainImage: index === 0,
-          order: (index + 1).toString(),
-          createdAt: post.createdAt || new Date().toISOString()
-        }));
+        const posts = await getProfilePosts(profileId, dataBaseDir);
+        const images = posts.map((post, index) => {
+          // Handle video URL and thumbnail extraction like the Express server
+          let videoUrl = post.videoUrl;
+          let thumbnailUrl = post.thumbnailUrl;
+
+          // Extract from embedCode if video fields are missing
+          if (!videoUrl && post.embedCode && post.contentType === 'video') {
+            console.log(`🎥 Extracting video URLs for post ${post.id || index}:`, post.embedCode.substring(0, 100) + '...');
+            const srcMatch = post.embedCode.match(/src=['"]([^'"]+)['"]/);
+            const posterMatch = post.embedCode.match(/poster=['"]([^'"]+)['"]/);
+            if (srcMatch) {
+              videoUrl = srcMatch[1];
+              console.log(`✅ Extracted video URL: ${videoUrl}`);
+            }
+            if (posterMatch) {
+              thumbnailUrl = posterMatch[1];
+              console.log(`✅ Extracted thumbnail URL: ${thumbnailUrl}`);
+            }
+          }
+
+          return {
+            id: post.id || `${profileId}-${index + 1}`,
+            profileId: profileId,
+            imageUrl: post.imageUrl,
+            videoUrl: videoUrl,
+            thumbnailUrl: thumbnailUrl,
+            contentType: post.contentType || 'image',
+            embedCode: post.embedCode,
+            title: post.title || '',
+            description: post.description || '',
+            tags: post.tags || [],
+            isMainImage: index === 0,
+            order: (index + 1).toString(),
+            createdAt: post.createdAt || new Date().toISOString()
+          };
+        });
         
         profiles.push({
           id: profileId,
@@ -88,17 +147,21 @@ async function getProfiles() {
   }
 }
 
-async function getProfilePosts(profileId) {
+async function getProfilePosts(profileId, dataBaseDir = null) {
   try {
-    const profileDir = path.join(process.cwd(), 'data', profileId);
+    const baseDir = dataBaseDir || path.join(process.cwd(), 'data');
+    const profileDir = path.join(baseDir, profileId);
     
-    // Check if directory exists
-    if (!fs.existsSync(profileDir)) {
+    let files;
+    try {
+      files = fs.readdirSync(profileDir);
+    } catch (error) {
+      console.warn(`⚠️ Profile directory not found: ${profileDir}`);
       return [];
     }
     
-    const files = fs.readdirSync(profileDir);
     const postFiles = files.filter(file => file.endsWith('.json') && file !== 'profile.json');
+    console.log(`📄 Found ${postFiles.length} post files for ${profileId}`);
     
     const posts = [];
     
@@ -107,7 +170,10 @@ async function getProfilePosts(profileId) {
         const filePath = path.join(profileDir, file);
         const postData = fs.readFileSync(filePath, 'utf-8');
         const post = JSON.parse(postData);
-        posts.push(post);
+        posts.push({
+          id: file.replace('.json', ''),
+          ...post
+        });
       } catch (error) {
         console.warn(`⚠️ Error reading post file ${file}:`, error);
       }
@@ -120,62 +186,6 @@ async function getProfilePosts(profileId) {
   }
 }
 
-// Demo profiles for Vercel deployment when data directory is not available
-function getDemoProfiles() {
-  return [
-    {
-      id: "demo-creator-1",
-      name: "Demo Creator",
-      title: "Content Creator",
-      category: "Demo",
-      description: "This is a demo profile for Vercel deployment",
-      profilePictureUrl: "https://via.placeholder.com/300x400",
-      coverPhotoUrl: "https://via.placeholder.com/800x400",
-      rating: "4.5",
-      reviewCount: "100",
-      likesCount: "1000",
-      viewsCount: "10000",
-      subscribersCount: "500",
-      tags: ["Demo", "Sample"],
-      isActive: true,
-      mediaCount: "3",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      images: [
-        {
-          id: "demo-1",
-          profileId: "demo-creator-1",
-          imageUrl: "https://via.placeholder.com/400x600",
-          title: "Demo Image 1",
-          description: "Demo content",
-          isMainImage: true,
-          order: "1",
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: "demo-2", 
-          profileId: "demo-creator-1",
-          imageUrl: "https://via.placeholder.com/400x600",
-          title: "Demo Image 2",
-          description: "Demo content",
-          isMainImage: false,
-          order: "2",
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: "demo-3",
-          profileId: "demo-creator-1", 
-          imageUrl: "https://via.placeholder.com/400x600",
-          title: "Demo Image 3",
-          description: "Demo content",
-          isMainImage: false,
-          order: "3",
-          createdAt: new Date().toISOString()
-        }
-      ]
-    }
-  ];
-}
 
 export default async function handler(req, res) {
   // Enable CORS

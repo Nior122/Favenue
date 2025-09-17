@@ -18,9 +18,40 @@
     "api/**/*.js": {
       "runtime": "nodejs20.x",
       "memory": 1024,
-      "includeFiles": "data/**"
+      "includeFiles": "data/**",
+      "maxDuration": 15
     }
   },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, Range, Content-Range, Content-Length" },
+        { "key": "Access-Control-Expose-Headers", "value": "Content-Range, Content-Length, Accept-Ranges" }
+      ]
+    },
+    {
+      "source": "/api/video-proxy",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Range, Content-Range, Content-Length, Content-Type" },
+        { "key": "Access-Control-Expose-Headers", "value": "Content-Range, Content-Length, Accept-Ranges" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/api/image-proxy", 
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Content-Length" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",

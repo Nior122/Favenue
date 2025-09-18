@@ -1,74 +1,48 @@
-# CreatorHub - Replit Project Documentation
+# CreatorHub - Replit Project Setup
 
 ## Overview
-CreatorHub is a full-stack web application designed as an adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories.
+CreatorHub is a full-stack web application designed as an adult content creator platform. It features a React frontend with Express backend, using file-based storage for profile data.
 
-**Current State**: Successfully imported and running in Replit environment
-
-## Tech Stack
-- **Frontend**: React 18 with TypeScript, Vite, shadcn/ui, Tailwind CSS
-- **Backend**: Node.js with Express.js, TypeScript
-- **Storage**: File-based storage system (no database needed)
-- **Development**: tsx for TypeScript execution
-- **Styling**: Dark-themed UI with Tailwind CSS and shadcn components
+## Recent Changes
+- **September 18, 2025**: Successfully imported and configured for Replit environment
+  - Fixed workflow configuration with webview output type on port 5000
+  - Verified frontend/backend integration works correctly
+  - Set up autoscale deployment configuration
+  - Application uses file-based storage (no database setup required)
 
 ## Project Architecture
+- **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
+- **Backend**: Node.js + Express.js + TypeScript
+- **Storage**: File-based JSON storage (data/ directory)
+- **Authentication**: Replit Auth with OpenID Connect integration
+- **Build System**: Vite for frontend, esbuild for backend production builds
+
+## Key Configuration
+- **Development Server**: Port 5000 (0.0.0.0 binding for Replit compatibility)
+- **Workflow**: "Start application" runs `npm run dev` with webview output
+- **Host Settings**: Already configured to allow all hosts for Replit proxy
+- **Storage**: Uses existing data/ directory with JSON files for profiles
+- **Deployment**: Autoscale target with build/start commands configured
+
+## File Structure
 ```
-├── client/src/          # React frontend
-│   ├── components/      # UI components including shadcn/ui
-│   ├── hooks/          # Custom React hooks
-│   ├── lib/            # Utility libraries and query client
-│   ├── pages/          # Application pages
-│   └── App.tsx         # Main application component
-├── server/              # Express backend
-│   ├── index.ts        # Main server entry point
-│   ├── routes.ts       # API route definitions
-│   ├── storage.ts      # File-based storage interface
-│   ├── vite.ts         # Vite development server setup
-│   └── ...            # Additional server modules
+├── client/src/          # React frontend components and pages
+├── server/              # Express backend with API routes
 ├── shared/              # Shared types and schemas
-│   └── schema.ts       # Data models and validation
-├── data/               # Content creator profiles and posts
-└── attached_assets/    # Static assets
+├── data/                # JSON data files for profiles
+├── api/                 # API endpoint handlers
+└── attached_assets/     # Static assets
 ```
 
-## Recent Changes (Import Setup)
-- **Fixed tsx command**: Resolved development server startup issue
-- **Configured Vite for Replit**: Set `allowedHosts: true` for proxy compatibility
-- **Set up workflow**: Configured frontend to run on port 5000 with webview output
-- **Deployment configuration**: Set up for autoscale deployment target
-
-## Current Features
-- Dark-themed React frontend with adult content platform styling
-- File-based storage system loading creator profiles from data folders
-- Express API server with profile endpoints
-- Video content processing and thumbnail extraction
-- Responsive design with shadcn/ui components
-- Real-time development with Vite HMR
-
-## Development Workflow
-```bash
-# Start development server (via workflow)
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm run start
-```
-
-## Configuration Notes
-- **Port**: Application runs on port 5000 (required for Replit)
-- **Host**: Configured for 0.0.0.0 to work with Replit's proxy
-- **Storage**: Uses file-based storage, loads profiles from `data/` folder
-- **Environment**: NODE_ENV=development for dev mode, production for build
+## Development Notes
+- Application successfully loads 29+ profiles from data/ folder
+- API endpoints working correctly (cached responses for performance)
+- Frontend properly configured for Replit iframe environment
+- No database setup required - uses file-based storage
+- All dependencies installed and working
 
 ## User Preferences
-- No specific preferences documented yet
-
-## Deployment Status
-- **Target**: Autoscale (configured)
-- **Build Command**: npm run build
-- **Start Command**: npm run start
-- **Ready for deployment**: Yes
+- Follow existing project patterns and file structure
+- Maintain the adult content platform aesthetic
+- Use existing shadcn/ui components and Tailwind styling
+- Keep file-based storage approach unless explicitly requested otherwise

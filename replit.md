@@ -1,48 +1,46 @@
-# CreatorHub - Replit Project Setup
+# CreatorHub - Replit Environment
 
-## Overview
-CreatorHub is a full-stack web application designed as an adult content creator platform. It features a React frontend with Express backend, using file-based storage for profile data.
+## Project Overview
+A full-stack adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories.
 
-## Recent Changes
-- **September 18, 2025**: Successfully imported and configured for Replit environment
-  - Fixed workflow configuration with webview output type on port 5000
-  - Verified frontend/backend integration works correctly
-  - Set up autoscale deployment configuration
-  - Application uses file-based storage (no database setup required)
+## Recent Setup Changes (September 18, 2025)
+- Configured project for Replit environment
+- Set up proper workflow for port 5000 with webview output
+- Confirmed frontend proxy configuration allows all hosts
+- Configured deployment settings for autoscale production deployment
+- Verified file-based storage system working with 29 profiles loaded
 
 ## Project Architecture
-- **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
-- **Backend**: Node.js + Express.js + TypeScript
-- **Storage**: File-based JSON storage (data/ directory)
-- **Authentication**: Replit Auth with OpenID Connect integration
-- **Build System**: Vite for frontend, esbuild for backend production builds
+- **Frontend**: React 18 with TypeScript, Vite, shadcn/ui, Tailwind CSS
+- **Backend**: Node.js with Express.js, TypeScript
+- **Storage**: File-based storage using JSON files in `/data` directory
+- **Media**: Video/image proxy endpoints for CORS handling
+- **Authentication**: Simplified for static deployment (returns 401)
 
-## Key Configuration
-- **Development Server**: Port 5000 (0.0.0.0 binding for Replit compatibility)
-- **Workflow**: "Start application" runs `npm run dev` with webview output
-- **Host Settings**: Already configured to allow all hosts for Replit proxy
-- **Storage**: Uses existing data/ directory with JSON files for profiles
-- **Deployment**: Autoscale target with build/start commands configured
+## Current Configuration
+- **Development Server**: npm run dev on port 5000 with 0.0.0.0 host
+- **Frontend Proxy**: allowedHosts: true for Replit compatibility
+- **Deployment**: Autoscale with npm run build and npm run start
+- **Storage**: Uses data folder with profile and post JSON files
 
-## File Structure
-```
-├── client/src/          # React frontend components and pages
-├── server/              # Express backend with API routes
-├── shared/              # Shared types and schemas
-├── data/                # JSON data files for profiles
-├── api/                 # API endpoint handlers
-└── attached_assets/     # Static assets
-```
+## Key Features Working
+- Profile loading from file system (29 profiles loaded)
+- Video URL extraction from Twitter content
+- Image/video proxy endpoints for CORS handling
+- Responsive design with dark theme
+- Admin panel for content management
+- Media scraping capabilities
 
-## Development Notes
-- Application successfully loads 29+ profiles from data/ folder
-- API endpoints working correctly (cached responses for performance)
-- Frontend properly configured for Replit iframe environment
-- No database setup required - uses file-based storage
-- All dependencies installed and working
+## Development Workflow
+1. `npm run dev` - Starts development server on port 5000
+2. Frontend served via Vite with HMR enabled
+3. Backend API routes at `/api/*`
+4. Static file serving in production mode
 
 ## User Preferences
-- Follow existing project patterns and file structure
-- Maintain the adult content platform aesthetic
-- Use existing shadcn/ui components and Tailwind styling
-- Keep file-based storage approach unless explicitly requested otherwise
+- No specific user preferences documented yet
+
+## Notes
+- Project successfully imported and running in Replit environment
+- All core functionality verified working
+- Ready for development and deployment

@@ -2,51 +2,48 @@
 import fs from 'fs';
 import path from 'path';
 
-// File storage functions for Vercel
+// File storage functions for Vercel - improved path resolution
 async function getProfiles() {
   try {
     console.log('📂 Loading profiles from data folder...');
     
-    // Get all profile folders from data directory
-    let dataBaseDir = path.join(process.cwd(), 'data');
-    console.log('📁 Looking for data directory at:', dataBaseDir);
-    console.log('📂 Current working directory contents:', fs.readdirSync(process.cwd()));
+    // Try multiple path resolution strategies for Vercel compatibility
+    const possiblePaths = [
+      path.join(process.cwd(), 'data'),
+      path.resolve('./data'),
+      path.join(__dirname, '../data'),
+      path.join(__dirname, '../../data'),
+      path.resolve(__dirname, '../data'),
+      './data'
+    ];
     
-    let entries;
-    try {
-      entries = fs.readdirSync(dataBaseDir, { withFileTypes: true });
-    } catch (error) {
-      console.error('❌ Failed to read data directory:', error);
-      console.log('📂 Trying alternative data paths...');
-      // Try alternative paths for Vercel deployment
-      const altPaths = [
-        path.join(__dirname, '../data'),
-        path.join(__dirname, 'data'),
-        './data'
-      ];
-      
-      let foundPath = null;
-      for (const altPath of altPaths) {
-        try {
-          console.log('🔍 Trying path:', altPath);
-          entries = fs.readdirSync(altPath, { withFileTypes: true });
-          foundPath = altPath;
-          console.log('✅ Found data directory at:', altPath);
-          break;
-        } catch (e) {
-          console.log('❌ Path not found:', altPath);
-        }
+    let dataBaseDir = null;
+    let entries = null;
+    
+    console.log('📂 Current working directory:', process.cwd());
+    console.log('📂 __dirname:', __dirname);
+    
+    for (const tryPath of possiblePaths) {
+      try {
+        console.log('🔍 Trying data path:', tryPath);
+        entries = fs.readdirSync(tryPath, { withFileTypes: true });
+        dataBaseDir = tryPath;
+        console.log('✅ Found data directory at:', tryPath);
+        break;
+      } catch (e) {
+        console.log('❌ Path not accessible:', tryPath, e.message);
       }
-      
-      if (!entries) {
-        console.error('❌ Could not find data directory in any location');
-        return [];
+    }
+    
+    if (!entries || !dataBaseDir) {
+      console.error('❌ Could not find data directory in any location');
+      // List what's actually available
+      try {
+        console.log('📂 Files in cwd:', fs.readdirSync(process.cwd()));
+      } catch (e) {
+        console.log('❌ Cannot list cwd contents:', e.message);
       }
-      
-      // Update dataBaseDir to the found path
-      if (foundPath) {
-        dataBaseDir = foundPath;
-      }
+      return [];
     }
     
     const profileDirs = entries
@@ -94,11 +91,12 @@ async function getProfiles() {
           let videoUrl = post.videoUrl;
           let thumbnailUrl = post.thumbnailUrl;
 
-          // Extract from embedCode if video fields are missing
+          // Extract from embedCode if video fields are missing - match Express implementation
           if (!videoUrl && post.embedCode && post.contentType === 'video') {
             console.log(`🎥 Extracting video URLs for post ${post.id || index}:`, post.embedCode.substring(0, 100) + '...');
-            const srcMatch = post.embedCode.match(/src=['"]([^'"]+)['"]/);
-            const posterMatch = post.embedCode.match(/poster=['"]([^'"]+)['"]/);
+            // Try both single and double quotes to match Express server
+            const srcMatch = post.embedCode.match(/src=['"]([^'"]+)['"]/) || post.embedCode.match(/src='([^']+)'/);
+            const posterMatch = post.embedCode.match(/poster=['"]([^'"]+)['"]/) || post.embedCode.match(/poster='([^']+)'/);
             if (srcMatch) {
               videoUrl = srcMatch[1];
               console.log(`✅ Extracted video URL: ${videoUrl}`);
@@ -106,6 +104,9 @@ async function getProfiles() {
             if (posterMatch) {
               thumbnailUrl = posterMatch[1];
               console.log(`✅ Extracted thumbnail URL: ${thumbnailUrl}`);
+            }
+            if (!srcMatch) {
+              console.log(`❌ Could not extract video URL from embedCode for post ${post.id || index}`);
             }
           }
 
@@ -149,7 +150,33 @@ async function getProfiles() {
 
 async function getProfilePosts(profileId, dataBaseDir = null) {
   try {
-    const baseDir = dataBaseDir || path.join(process.cwd(), 'data');
+    // Use the same path resolution logic as the main function
+    let baseDir = dataBaseDir;
+    if (!baseDir) {
+      const possiblePaths = [
+        path.join(process.cwd(), 'data'),
+        path.resolve('./data'),
+        path.join(__dirname, '../data'),
+        path.join(__dirname, '../../data'),
+        './data'
+      ];
+      
+      for (const tryPath of possiblePaths) {
+        try {
+          fs.readdirSync(tryPath);
+          baseDir = tryPath;
+          break;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    
+    if (!baseDir) {
+      console.warn(`⚠️ Could not find data directory for profile ${profileId}`);
+      return [];
+    }
+    
     const profileDir = path.join(baseDir, profileId);
     
     let files;

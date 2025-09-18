@@ -5,9 +5,34 @@ import path from 'path';
 async function getProfile(id) {
   try {
     console.log(`📂 Loading profile: ${id}`);
-    const dataDir = path.join(process.cwd(), 'data');
-    const profileDir = path.join(dataDir, id);
     
+    // Use improved path resolution for Vercel compatibility
+    const possiblePaths = [
+      path.join(process.cwd(), 'data'),
+      path.resolve('./data'),
+      path.join(__dirname, '../../data'),
+      path.join(__dirname, '../data'),
+      './data'
+    ];
+    
+    let dataDir = null;
+    for (const tryPath of possiblePaths) {
+      try {
+        fs.readdirSync(tryPath);
+        dataDir = tryPath;
+        console.log(`✅ Found data directory at: ${tryPath}`);
+        break;
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    if (!dataDir) {
+      console.error(`❌ Could not find data directory for profile ${id}`);
+      return null;
+    }
+    
+    const profileDir = path.join(dataDir, id);
     console.log(`📁 Looking for profile directory at: ${profileDir}`);
     
     // Check if profile directory exists
@@ -34,7 +59,7 @@ async function getProfile(id) {
     } catch (error) {
       console.log(`⚠️ No profile.json found for ${id}, generating fallback data`);
       // Generate fallback profile data using first post image
-      const posts = await getProfilePosts(id);
+      const posts = await getProfilePosts(id, dataDir);
       profileData = { 
         name: id,
         title: "Content Creator",
@@ -53,17 +78,18 @@ async function getProfile(id) {
     }
     
     // Read posts for this profile
-    const posts = await getProfilePosts(id);
+    const posts = await getProfilePosts(id, dataDir);
     const images = posts.map((post, index) => {
       // Handle video URL and thumbnail extraction like the Express server
       let videoUrl = post.videoUrl;
       let thumbnailUrl = post.thumbnailUrl;
 
-      // Extract from embedCode if video fields are missing
+      // Extract from embedCode if video fields are missing - match Express implementation
       if (!videoUrl && post.embedCode && post.contentType === 'video') {
         console.log(`🎥 Extracting video URLs for post ${post.id || index}:`, post.embedCode.substring(0, 100) + '...');
-        const srcMatch = post.embedCode.match(/src=['"]([^'"]+)['"]/);
-        const posterMatch = post.embedCode.match(/poster=['"]([^'"]+)['"]/);
+        // Try both single and double quotes to match Express server
+        const srcMatch = post.embedCode.match(/src=['"]([^'"]+)['"]/) || post.embedCode.match(/src='([^']+)'/);
+        const posterMatch = post.embedCode.match(/poster=['"]([^'"]+)['"]/) || post.embedCode.match(/poster='([^']+)'/);
         if (srcMatch) {
           videoUrl = srcMatch[1];
           console.log(`✅ Extracted video URL: ${videoUrl}`);
@@ -71,6 +97,9 @@ async function getProfile(id) {
         if (posterMatch) {
           thumbnailUrl = posterMatch[1];
           console.log(`✅ Extracted thumbnail URL: ${thumbnailUrl}`);
+        }
+        if (!srcMatch) {
+          console.log(`❌ Could not extract video URL from embedCode for post ${post.id || index}`);
         }
       }
 
@@ -108,9 +137,36 @@ async function getProfile(id) {
   }
 }
 
-async function getProfilePosts(profileId) {
+async function getProfilePosts(profileId, dataBaseDir = null) {
   try {
-    const profileDir = path.join(process.cwd(), 'data', profileId);
+    // Use the same path resolution logic as the main function
+    let baseDir = dataBaseDir;
+    if (!baseDir) {
+      const possiblePaths = [
+        path.join(process.cwd(), 'data'),
+        path.resolve('./data'),
+        path.join(__dirname, '../../data'),
+        path.join(__dirname, '../data'),
+        './data'
+      ];
+      
+      for (const tryPath of possiblePaths) {
+        try {
+          fs.readdirSync(tryPath);
+          baseDir = tryPath;
+          break;
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    
+    if (!baseDir) {
+      console.warn(`⚠️ Could not find data directory for profile ${profileId}`);
+      return [];
+    }
+    
+    const profileDir = path.join(baseDir, profileId);
     
     let files;
     try {

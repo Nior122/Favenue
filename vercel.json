@@ -14,12 +14,13 @@
       }
     }
   ],
+  "outputFileTracing": false,
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs20.x",
       "memory": 1024,
-      "includeFiles": "data/**",
-      "maxDuration": 15
+      "includeFiles": ["data/**", "data/**/profile.json", "data/**/*.json"],
+      "maxDuration": 30
     }
   },
   "headers": [

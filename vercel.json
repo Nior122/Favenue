@@ -3,8 +3,14 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "functions": {
+    "api/profiles.js": {
+      "includeFiles": "data/**/*"
+    },
+    "api/profiles/*.js": {
+      "includeFiles": "data/**/*"
+    },
     "api/**/*.js": {
-      "includeFiles": "data/**"
+      "includeFiles": "data/**/*"
     }
   }
 }

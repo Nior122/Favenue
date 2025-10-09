@@ -1,0 +1,93 @@
+You are an experienced full-stack engineer and DevOps specialist with expertise in Next.js (App or Pages Router), Vercel deployments, and database/cloud storage integrations. My site recently deployed, and after the last deployment the profile pages and media stopped showing up on the live site — however all relevant files and assets appear in the GitHub repo. Fix the problem end-to-end and return a dry-run report first. Do not delete or change production data until I explicitly confirm after the dry-run.
+
+TASK OVERVIEW (Dry-run first)
+1. Produce a DRY-RUN diagnostic report showing:
+   - The Git commit/branch that Vercel deployed (commit SHA, branch) and whether it matches the latest GitHub main branch.
+   - Vercel deployment log excerpts (build start → build finish) highlighting any warnings or errors referencing missing files, image issues, build scripts, or server exceptions.
+   - A list of failing asset requests (network 404/403) from the deployed site (collect the first 50 unique URLs).
+   - A list of server/API errors (500s) from Vercel runtime logs during page requests for profiles (first 100 log lines around errors).
+   - The Vercel environment variable values relevant to content serving (report variable names only; redact secrets) — e.g., `DATABASE_URL`, `CLOUDINARY_URL`, `S3_*`, `NEXT_PUBLIC_API_URL`, `ASSET_PREFIX`, `IMAGE_PROVIDER`.
+   - Confirm whether the DB used by Vercel contains the expected profiles/images (sample 10 rows from `profiles` and 20 from `images`). If DB is empty, note it.
+   - Confirm whether media files are expected to be served from `public/` (committed to repo) or from a cloud provider (Cloudinary/S3). If `public/`, list the files present in the repo under `/public` (sample).
+   - Check `next.config.js` (or `vite`/other config) for `basePath`, `assetPrefix`, `images.domains`, and any `publicRuntimeConfig` that could change asset URLs. Report any mismatches against how assets are referenced in the code.
+   - Check for case-sensitivity issues: list any imports or image references whose filename casing does not match the repo (which would work on Windows/Replit but fail on Linux on Vercel).
+
+DIAGNOSIS STEPS (what to run; dry-run only — do not modify)
+2. Run these checks (dry-run; collect and return output):
+   - Query GitHub: `git ls-remote --heads origin` and `git rev-parse origin/main` vs Vercel deployed SHA from the deployment logs.
+   - Retrieve Vercel build/deploy logs for the latest failed/successful deploy.
+   - Run a site crawl (headless) of deployed URL to collect asset 4xx/5xx responses (example tool: `curl` / `wget` / `playwright` script). Save first 50 failing asset URLs.
+   - Fetch Vercel runtime logs for `/api/profiles/:id` requests and profile page requests (last 200 lines).
+   - Check Vercel env var names (do not reveal secrets) and compare to local `.env` used during development.
+   - Run sample DB queries against Vercel’s configured DB (read-only queries) to confirm presence of profile rows:
+     * `SELECT id, handle, title FROM profiles LIMIT 10;`
+     * `SELECT id, profileId, url FROM images WHERE profileId = <sample> LIMIT 20;`
+   - Inspect repository tree (commit deployed) for `/public`, `/static`, or any folder containing media and sample file list.
+   - Check `next.config.js` (or equivalent) for `assetPrefix`, `basePath`, `images.domains`, and any rewrites/redirects.
+
+REMEDIATION PLAN (execute only after I review the dry-run)
+3. Based on the dry-run findings, perform the appropriate fix(es) below (choose all relevant steps and execute them in order). For each change, create a PR with diffs and a clear explanation and include verification steps:
+
+A — If Vercel deployed an older commit or wrong branch:
+   - Re-deploy the correct branch/commit to Vercel (trigger redeploy), or update Vercel to follow the intended branch.
+   - Clear Vercel build cache and force a fresh build: use Vercel dashboard “Redeploy with clear cache” or `vercel --prod --force`.
+   - Verify that the newly deployed commit matches GitHub `main`.
+
+B — If environment variables are missing/wrong on Vercel (e.g., `DATABASE_URL`, `CLOUDINARY_URL`, etc.):
+   - Update Vercel project environment variables with the correct names/values (I will paste secrets when requested). Do not hardcode secrets in repo.
+   - Redeploy and verify API access and DB queries succeed.
+
+C — If DB used in Replit is local (SQLite) while Vercel points to an empty production DB:
+   - Migrate data from the development DB to the production DB (produce dump and restore). Provide dry-run migration plan and ask for confirmation before performing.
+   - Verify migrated data with `SELECT` counts and sample rows.
+
+D — If images exist in repo but are not being served:
+   - Ensure media are in `/public` (or imported correctly). If assets are committed, verify they are present in deployed build output (use `curl` to request `/public/<path>`).
+   - If `assetPrefix` or `basePath` is set, adjust references or update `next.config.js` to match.
+   - Fix any incorrect paths or case-sensitivity mismatches in code (rename files or update imports to exact casing).
+   - If using Next/Image, ensure `next.config.js` contains `images.domains` for external CDN images and that `unoptimized` is used if necessary for absolute URLs.
+
+E — If server-side errors prevent pages from rendering (e.g., missing `.prisma/client` or generated client not present):
+   - Ensure code generation runs in CI/build (`prisma generate` or relevant). Add `prisma generate` to `postinstall` or CI steps, or modify Vercel Build Command to `npm run generate && npm run build`.
+   - Move any server-only imports out of client bundles.
+   - Redeploy and confirm the server-side API endpoints return expected JSON.
+
+F — If caching/CDN is serving stale content:
+   - Invalidate CDN cache (Vercel cache purge option or TTL), or redeploy with cache clearing.
+   - Instruct user how to clear browser cache and test with hard-refresh.
+
+G — If images were uploaded to Replit filesystem and not pushed to GitHub:
+   - Copy media from Replit to a cloud store (Cloudinary/S3) and update DB image URLs to point to the CDN.
+   - Update upload flow to use cloud storage for future uploads.
+
+EXECUTION & SAFETY
+4. Execution rules:
+   - Do not perform destructive DB changes until after I inspect the dry-run and confirm.
+   - Always create backups (DB dump, media manifest) before any migration/deletion.
+   - Provide a one-command rollback for any change you make.
+   - Limit risky operations to maintenance window and note downtime if any.
+
+VERIFICATION (what I need to see after fixes)
+5. After fixes are applied, show:
+   - A successful Vercel build log with deployed commit SHA.
+   - API JSON sample from `/api/profiles/:handle` showing profile and image CDN URLs.
+   - A list of previously failing asset URLs now returning 200.
+   - `SELECT COUNT(*)` comparison showing parity between source (GitHub/Replit DB or repo) and production DB.
+   - A screenshot of a live profile page showing the correct images (no placeholders).
+
+DELIVERABLES (return these)
+6. Deliver:
+   - Dry-run diagnostic report (required first).
+   - PR(s) with code/config changes (if any).
+   - Exact Vercel Dashboard steps for environment variables and re-deploy (copy-paste).
+   - Backup files (DB dump path, media manifest) and rollback script.
+   - Final verification report (logs, API output, screenshot).
+
+If you need one quick clarifying question before the dry-run, ask exactly one: either
+  - "Are the profile & image records stored in the DB (yes/no) or committed as static files in the repo (yes/no)?"
+or
+  - "Which branch should I target for redeploy: `main` or a different branch?"
+
+START:
+1) Run the dry-run diagnostics described above and return the full report.
+2) Wait for my confirmation to apply any fixes or migrations. 

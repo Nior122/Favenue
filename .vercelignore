@@ -1,5 +1,5 @@
-# Include data directory for profile content
-# data/ - REMOVED: Data needed for profiles to display
+# IMPORTANT: data/ folder MUST be included for profiles to work
+# Do NOT add data/ to this ignore file
 
 # Exclude development files
 .cache/
@@ -8,7 +8,6 @@ replit.nix
 replit.md
 
 # Exclude build artifacts that will be regenerated
-dist/
 node_modules/
 
 # Exclude documentation

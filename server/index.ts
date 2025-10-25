@@ -38,7 +38,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  console.log('📁 Using file-based storage (no database needed)');
+  const USE_DATABASE = process.env.USE_DATABASE === 'true' || process.env.NODE_ENV === 'production';
+  console.log(`📊 Storage mode: ${USE_DATABASE ? 'PostgreSQL Database' : 'File-based'}`);
 
   const server = registerRoutes(app);
 

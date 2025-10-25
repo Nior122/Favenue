@@ -1,14 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { fileStorage } from "./fileStorage";
+import { dbStorage } from "./dbStorage";
 import { scrapeMediaUrls, createPostsFromMedia } from "./scraper";
 import axios from "axios";
 
+// Use database storage in production (Vercel), file storage in development (Replit)
+const isProduction = process.env.NODE_ENV === "production" || !process.env.REPL_ID;
+const USE_DATABASE = process.env.USE_DATABASE === 'true' || isProduction;
+const storage = USE_DATABASE ? dbStorage : fileStorage;
+
+console.log(`📊 Storage in routes: ${USE_DATABASE ? 'DATABASE' : 'FILE-BASED'} (isProduction: ${isProduction}, USE_DATABASE: ${process.env.USE_DATABASE})`);
+
 export function registerRoutes(app: Express): Server {
-  // Profile routes - now using file storage
+  // Profile routes - uses database in production, file storage in development
   app.get('/api/profiles', async (req, res) => {
     try {
-      const profiles = await fileStorage.getAllProfiles();
+      const profiles = await storage.getAllProfiles();
       res.json(profiles);
     } catch (error) {
       console.error("Error fetching profiles:", error);
@@ -19,7 +27,7 @@ export function registerRoutes(app: Express): Server {
   app.get('/api/profiles/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const profile = await fileStorage.getProfile(id);
+      const profile = await storage.getProfile(id);
       
       if (!profile) {
         return res.status(404).json({ message: "Profile not found" });
@@ -198,7 +206,7 @@ export function registerRoutes(app: Express): Server {
   // Admin routes for managing content via GitHub
   app.post('/api/profiles', async (req, res) => {
     try {
-      const profile = await fileStorage.addProfile(req.body);
+      const profile = await storage.addProfile(req.body);
       res.status(201).json(profile);
     } catch (error) {
       console.error("Error creating profile:", error);
@@ -209,7 +217,7 @@ export function registerRoutes(app: Express): Server {
   app.post('/api/profiles/:profileId/posts', async (req, res) => {
     try {
       const { profileId } = req.params;
-      const post = await fileStorage.addPost(profileId, req.body);
+      const post = await storage.addPost(profileId, req.body);
       res.status(201).json(post);
     } catch (error) {
       console.error("Error creating post:", error);
@@ -220,7 +228,7 @@ export function registerRoutes(app: Express): Server {
   app.delete('/api/profiles/:profileId/posts/:postId', async (req, res) => {
     try {
       const { profileId, postId } = req.params;
-      const success = await fileStorage.deletePost(profileId, postId);
+      const success = await storage.deletePost(profileId, postId);
       
       if (success) {
         res.json({ message: "Post deleted successfully" });
@@ -245,7 +253,7 @@ export function registerRoutes(app: Express): Server {
       console.log(`🚀 Starting media scraping for profile: ${profileId}`);
       
       // Clear existing posts for this profile first
-      await fileStorage.clearProfilePosts(profileId);
+      await storage.clearProfilePosts(profileId);
       
       // Scrape media URLs
       const mediaItems = await scrapeMediaUrls(url);

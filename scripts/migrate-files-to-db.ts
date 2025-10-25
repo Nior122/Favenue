@@ -94,7 +94,6 @@ async function migrateProfilesToDatabase() {
         
         console.log(`   📄 Found ${postFiles.length} post files`);
 
-        const imagesToInsert = [];
         for (const [index, file] of postFiles.entries()) {
           try {
             const postPath = path.join(profileDir, file);
@@ -112,7 +111,7 @@ async function migrateProfilesToDatabase() {
               }
             }
 
-            imagesToInsert.push({
+            await dbStorage.addProfileImage({
               profileId: profile.id,
               imageUrl: postData.imageUrl || '',
               videoUrl: videoUrl || null,
@@ -129,17 +128,11 @@ async function migrateProfilesToDatabase() {
             console.log(`      ⚠️  Error importing post ${file}:`, error);
           }
         }
-
-        if (imagesToInsert.length > 0) {
-          await Promise.all(imagesToInsert.map(img => dbStorage.addProfileImage(img)));
-        }
-        const postCount = imagesToInsert.length;
-
         await dbStorage.updateProfile(profile.id, {
-          mediaCount: postCount.toString(),
+          mediaCount: postFiles.length.toString(),
         });
 
-        console.log(`   ✅ Imported ${postCount} posts`);
+        console.log(`   ✅ Imported ${postFiles.length} posts`);
         successCount++;
 
       } catch (error) {

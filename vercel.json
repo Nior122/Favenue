@@ -1,27 +1,16 @@
 {
   "version": 2,
-  "buildCommand": "node vercel-build.js && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
-  "functions": {
-    "api/profiles.js": {
-      "includeFiles": "api/data/**"
-    },
-    "api/profiles/[id].js": {
-      "includeFiles": "api/data/**"
-    }
-  },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "source": "/api/(.*)",
+      "destination": "/api"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

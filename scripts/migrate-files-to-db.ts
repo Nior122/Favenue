@@ -70,6 +70,7 @@ async function migrateProfilesToDatabase() {
         console.log(`\n📝 Migrating profile: ${profileId}`);
 
         const profile = await dbStorage.createProfile({
+          id: profileId,
           name: profileData.name,
           title: profileData.title,
           category: profileData.category,
@@ -85,7 +86,7 @@ async function migrateProfilesToDatabase() {
           subscribersCount: profileData.subscribersCount || '0',
           tags: profileData.tags || null,
           isActive: profileData.isActive !== false,
-        });
+        } as any);
 
         console.log(`   ✅ Profile created with ID: ${profile.id}`);
 

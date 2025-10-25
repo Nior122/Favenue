@@ -3,7 +3,14 @@
 ## Project Overview
 A full-stack adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories.
 
-## Recent Setup Changes (September 18, 2025)
+## Recent Setup Changes
+**October 25, 2025** - Fixed Vercel file-based storage
+- Created `vercel-build.js` pre-build script to copy data/ into api/data/
+- Updated vercel.json to bundle api/data/** with serverless functions
+- Modified serverless functions to look for data in api/data/ directory first
+- This fixes the issue where individual profile pages returned 404 on Vercel
+
+**September 18, 2025** - Initial Replit setup
 - Configured project for Replit environment
 - Set up proper workflow for port 5000 with webview output
 - Confirmed frontend proxy configuration allows all hosts

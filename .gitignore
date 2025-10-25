@@ -5,3 +5,4 @@ vite.config.ts.*
 *.tar.gz
 dist
 .vercel
+api/data

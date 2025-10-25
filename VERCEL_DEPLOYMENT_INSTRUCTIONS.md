@@ -76,15 +76,15 @@ After deployment, test these URLs:
 ```json
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "node vercel-build.js && npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "functions": {
     "api/profiles.js": {
-      "includeFiles": "data/**"
+      "includeFiles": "api/data/**"
     },
     "api/profiles/[id].js": {
-      "includeFiles": "data/**"
+      "includeFiles": "api/data/**"
     }
   },
   "routes": [
@@ -103,9 +103,42 @@ After deployment, test these URLs:
 }
 ```
 
-**Important Changes**:
-- The SPA fallback route uses `/index.html` (not `/dist/public/index.html`) because Vercel serves files from the outputDirectory root at runtime
-- The dynamic route `api/profiles/[id].js` is **explicitly referenced** instead of using a wildcard pattern - this is critical for Vercel to properly bundle the data folder with the dynamic route function
+**Critical Changes**:
+1. **Build command** runs `vercel-build.js` FIRST to copy data into the `api/` directory before the main build
+2. **includeFiles** now points to `api/data/**` instead of `data/**` - this ensures the copied data is bundled with each serverless function
+3. The dynamic route `api/profiles/[id].js` is **explicitly referenced** - wildcards don't work reliably for Vercel function bundling
+4. SPA fallback route uses `/index.html` because Vercel serves from outputDirectory root at runtime
+
+### `vercel-build.js`
+This pre-build script copies the `data/` folder into `api/data/` so it gets bundled with serverless functions:
+
+```javascript
+import fs from 'fs-extra';
+import path from 'path';
+
+async function prepareVercelBuild() {
+  try {
+    console.log('🚀 Preparing Vercel build...');
+    
+    // Copy data folder to api directory so it gets bundled with serverless functions
+    const sourceDataDir = path.join(process.cwd(), 'data');
+    const apiDataDir = path.join(process.cwd(), 'api', 'data');
+    
+    if (fs.existsSync(sourceDataDir)) {
+      console.log('📁 Copying data folder to api directory...');
+      await fs.copy(sourceDataDir, apiDataDir);
+      console.log(`✅ Copied data to api/data`);
+    }
+    
+    console.log('✅ Vercel build preparation complete');
+  } catch (error) {
+    console.error('❌ Error preparing Vercel build:', error);
+    process.exit(1);
+  }
+}
+
+prepareVercelBuild();
+```
 
 ### `.vercelignore`
 - Excludes development files

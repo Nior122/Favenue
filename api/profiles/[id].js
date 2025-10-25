@@ -12,11 +12,14 @@ async function getProfile(id) {
     
     // Use improved path resolution for Vercel compatibility
     const possiblePaths = [
+      path.join(__dirname, '../data'),
+      path.join(__dirname, '../../data'),
+      path.join(process.cwd(), 'api', 'data'),
       path.join(process.cwd(), 'data'),
       path.resolve('./data'),
-      path.join(__dirname, '../../data'),
-      path.join(__dirname, '../data'),
-      './data'
+      path.resolve('./api/data'),
+      './data',
+      './api/data'
     ];
     
     let dataDir = null;

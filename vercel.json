@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "node vercel-build.js && npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "functions": {
     "api/profiles.js": {
-      "includeFiles": "data/**"
+      "includeFiles": "api/data/**"
     },
     "api/profiles/[id].js": {
-      "includeFiles": "data/**"
+      "includeFiles": "api/data/**"
     }
   },
   "routes": [

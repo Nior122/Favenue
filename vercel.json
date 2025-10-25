@@ -7,7 +7,7 @@
     "api/profiles.js": {
       "includeFiles": "data/**"
     },
-    "api/profiles/*.js": {
+    "api/profiles/[id].js": {
       "includeFiles": "data/**"
     }
   },

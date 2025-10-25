@@ -83,7 +83,7 @@ After deployment, test these URLs:
     "api/profiles.js": {
       "includeFiles": "data/**"
     },
-    "api/profiles/*.js": {
+    "api/profiles/[id].js": {
       "includeFiles": "data/**"
     }
   },
@@ -103,7 +103,9 @@ After deployment, test these URLs:
 }
 ```
 
-**Important**: The SPA fallback route uses `/index.html` (not `/dist/public/index.html`) because Vercel serves files from the outputDirectory root at runtime.
+**Important Changes**:
+- The SPA fallback route uses `/index.html` (not `/dist/public/index.html`) because Vercel serves files from the outputDirectory root at runtime
+- The dynamic route `api/profiles/[id].js` is **explicitly referenced** instead of using a wildcard pattern - this is critical for Vercel to properly bundle the data folder with the dynamic route function
 
 ### `.vercelignore`
 - Excludes development files

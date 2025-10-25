@@ -4,11 +4,14 @@
 A full-stack adult content creator platform inspired by OnlyFans/Fanvenue aesthetics. It serves as a premium directory where users can discover exclusive content creators across various categories.
 
 ## Recent Setup Changes
-**October 25, 2025** - Fixed Vercel file-based storage
-- Created `vercel-build.js` pre-build script to copy data/ into api/data/
-- Updated vercel.json to bundle api/data/** with serverless functions
-- Modified serverless functions to look for data in api/data/ directory first
-- This fixes the issue where individual profile pages returned 404 on Vercel
+**October 25, 2025** - Migrated to PostgreSQL for Vercel Deployment
+- Set up Neon PostgreSQL database integration
+- Created migration script to transfer all 30 profiles (5,486 posts) from files to database
+- Fixed migration to use folder names as profile IDs (backward compatible URLs)
+- Created serverless API wrapper (api/index.js) for Vercel deployment
+- Updated vercel.json for proper serverless function routing
+- Tested successfully with database mode - all profiles loading correctly
+- Ready for Vercel deployment with DATABASE_URL environment variable
 
 **September 18, 2025** - Initial Replit setup
 - Configured project for Replit environment

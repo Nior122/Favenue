@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { fileStorage } from "./fileStorage";
+import { dbStorage } from "./dbStorage";
 import { setupAuth, isAuthenticated as replitAuth } from "./replitAuth";
 import { setupProdAuth, isAuthenticated as prodAuth, isAdmin as prodAdmin } from "./prodAuth";
 import { insertProfileSchema, insertProfileImageSchema } from "@shared/schema";
@@ -11,8 +12,12 @@ import axios from "axios";
 const isProduction = process.env.NODE_ENV === "production" || !process.env.REPL_ID;
 const isAuthenticated = isProduction ? prodAuth : replitAuth;
 
-// Use fileStorage as the storage implementation
-const storage = fileStorage;
+// Use database storage in production (Vercel), file storage in development (Replit)
+// This is critical because Vercel's serverless functions have read-only filesystem
+const USE_DATABASE = process.env.USE_DATABASE === 'true' || isProduction;
+const storage = USE_DATABASE ? dbStorage : fileStorage;
+
+console.log(`📊 Storage mode: ${USE_DATABASE ? 'DATABASE' : 'FILE-BASED'} (isProduction: ${isProduction}, USE_DATABASE env: ${process.env.USE_DATABASE})`);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware - use different auth based on environment
